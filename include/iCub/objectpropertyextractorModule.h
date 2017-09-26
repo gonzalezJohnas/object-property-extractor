@@ -157,7 +157,6 @@
 class objectpropertyextractorModule:public yarp::os::RFModule {
 
 
-    std::string scriptName;
     std::string moduleName;                  // name of the module
     std::string robotName;                   // name of the robot
     std::string handlerPortName;             // name of handler port
