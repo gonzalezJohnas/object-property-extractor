@@ -3,16 +3,23 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 cmake_minimum_required(VERSION 2.6)
-SET(KEYWORD "objectpropertycollector")
+SET(KEYWORD "objectpropertyextractor")
 PROJECT(${KEYWORD})
 set(CMAKE_CXX_STANDARD 11)
+
 find_package(YARP REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(ICUB REQUIRED)
 
 
 #search for includes
 INCLUDE_DIRECTORIES(
         ${PROJECT_SOURCE_DIR}/include
         ${YARP_INCLUDE_DIRS}
+        ${OpenCV_INCLUDE_DIRS}
+        ${ICUB_INCLUDE_DIRS}
+
+
 )
 
 # Search for source code.
@@ -20,6 +27,7 @@ FILE(GLOB folder_source src/*.cpp src/*.cc src/*.c)
 FILE(GLOB folder_header include/iCub/*.h)
 SOURCE_GROUP("Source Files" FILES ${folder_source})
 SOURCE_GROUP("Header Files" FILES ${folder_header})
+
 
 
 # Set up our main executable
@@ -31,6 +39,7 @@ IF (folder_source)
 
     TARGET_LINK_LIBRARIES( ${KEYWORD}
             ${YARP_LIBRARIES}
+            ${OpenCV_LIBRARIES}
             )
 
     INSTALL_TARGETS(/bin ${KEYWORD})

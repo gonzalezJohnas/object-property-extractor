@@ -18,7 +18,6 @@
 //
 #include <iCub/objectpropertyextractorModule.h>
 
-
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace std;
@@ -62,6 +61,8 @@ bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
                          Value("icub"),
                          "Robot name (string)").asString();
 
+
+
     /*
     * attach a port of the same name as the module (prefixed with a /) to the module
     * so that messages received from the port are redirected to the respond method
@@ -78,7 +79,10 @@ bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
 
 
 
-
+    rThread = new objectpropertyextractorRatethread();
+    /*pass the name of the module in order to create ports*/
+    rThread->setName(moduleName);
+    rThread->start();
     return true;       // let the RFModule know everything went well
     // so that it will then run the module
 }
@@ -86,7 +90,7 @@ bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
 bool objectpropertyextractorModule::close() {
     handlerPort.close();
     /* stop the thread */
-    printf("stopping the thread \n");
+    yInfo("stopping the thread \n");
     rThread->stop();
     delete rThread;
     return true;
@@ -145,6 +149,8 @@ bool objectpropertyextractorModule::respond(const Bottle &command, Bottle &reply
                 switch (command.get(1).asVocab()) {
 
                     default:
+                        cv::Mat lr = rThread->getInputImage();
+                        rThread->extractFeatures(lr);
                         cout << "received an unknown request after a GET" << endl;
                         break;
                 }

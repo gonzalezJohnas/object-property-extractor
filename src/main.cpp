@@ -10,11 +10,10 @@ int main(int argc, char *argv[]) {
 
     Network yarp;
     objectpropertyextractorModule module;
-
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("interactionInterface.ini");      //overridden by --from parameter
-    rf.setDefaultContext("interactionInterface");              //overridden by --context parameter
+    rf.setDefaultConfigFile("objectpropertyextractor.ini");      //overridden by --from parameter
+    rf.setDefaultContext("objectpropertyextractor");              //overridden by --context parameter
     rf.configure(argc, argv);
 
 

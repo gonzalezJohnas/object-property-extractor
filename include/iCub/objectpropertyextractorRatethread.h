@@ -32,20 +32,32 @@
 #include <yarp/dev/all.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/Log.h>
+#include <yarp/os/Bottle.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <opencv2/core/types.hpp>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 
+using  cv::Mat;
 class objectpropertyextractorRatethread : public yarp::os::RateThread {
 private:
     bool result;                    //result of the processing
+
 
     std::string robot;              // name of the robot
     std::string configFile;         // name of the configFile where the parameter of the camera are set
     std::string name;               // rootname of all the ports opened by this thread
 
+    yarp::sig::ImageOf<yarp::sig::PixelRgb>* inputImage;
+    cv::Mat  inputImageMat;
+
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imagePortIn;
+    yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
 
 
 public:
@@ -97,6 +109,42 @@ public:
     * function that sets the inputPort name
     */
     void setInputPortName(std::string inpPrtName);
+
+
+    Mat getInputImage(){ return this->inputImageMat;}
+
+
+//************************************************************************************************************************
+// Processing functions
+
+    /**
+     * Function that extract all the features
+     */
+
+    void extractFeatures(Mat inputImage);
+    /**
+     * Function that return 3D world coordinate from 2D points
+     */
+
+    cv::Point3d getCoordinateWorld(cv::Point2f centerPoint);
+
+    /**
+     * Function to get the Dominant color of the input image
+     */
+
+    std::string getDominantColor(Mat inputImage);
+
+    /**
+     * Function to get the center position in 2D referencial of input Image
+     */
+
+    cv::Point2f getCenter2DPosition(Mat inputImage);
+
+    /**
+     * Function to get the pixel size  in 2D referencial of input Image
+     */
+
+    const int getPixelSize(Mat inputImage);
 
 
 };

@@ -135,24 +135,20 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/Thread.h>
 #include <iCub/objectpropertyextractorRatethread.h>
+#include <opencv2/opencv.hpp>
 
 
 // general command vocab's
-#define COMMAND_VOCAB_IS                 VOCAB2('i','s')
 #define COMMAND_VOCAB_OK                 VOCAB2('o','k')
 
 #define COMMAND_VOCAB_SET                VOCAB3('s','e','t')
 #define COMMAND_VOCAB_GET                VOCAB3('g','e','t')
-#define COMMAND_VOCAB_RUN                VOCAB3('r','u','n')
 #define COMMAND_VOCAB_SUSPEND            VOCAB3('s','u','s')
 #define COMMAND_VOCAB_RES                VOCAB3('r','e','s')
-#define COMMAND_VOCAB_FIX                VOCAB3('f','i','x')
 
 #define COMMAND_VOCAB_HELP               VOCAB4('h','e','l','p')
 #define COMMAND_VOCAB_FAILED             VOCAB4('f','a','i','l')
-#define COMMAND_VOCAB_SEEK               VOCAB4('s','e','e','k')
-#define COMMAND_VOCAB_CENT               VOCAB4('c','e','n','t')
-#define COMMAND_VOCAB_STOP               VOCAB4('s','t','o','p')
+
 
 class objectpropertyextractorModule:public yarp::os::RFModule {
 
@@ -161,7 +157,7 @@ class objectpropertyextractorModule:public yarp::os::RFModule {
     std::string robotName;                   // name of the robot
     std::string handlerPortName;             // name of handler port
     std::string configFile;                  // name of the configFile that the resource Finder will seek
-    /*  */
+
     yarp::os::Port handlerPort;              // a port to handle messages
     yarp::os::Semaphore mutex;                  // semaphore for the respond function
 
