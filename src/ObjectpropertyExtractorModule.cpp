@@ -16,7 +16,7 @@
   * Public License for more details
 */
 //
-#include <iCub/objectpropertyextractorModule.h>
+#include <iCub/ObjectpropertyExtractorModule.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -29,7 +29,7 @@ using namespace std;
  *  equivalent of the "open" method.
  */
 
-bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
+bool ObjectpropertyExtractorModule::configure(yarp::os::ResourceFinder &rf) {
 
     if (rf.check("help")) {
         printf("HELP \n");
@@ -79,7 +79,7 @@ bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
 
 
 
-    rThread = new objectpropertyextractorRatethread();
+    rThread = new ObjectpropertyExtractorRatethread();
     /*pass the name of the module in order to create ports*/
     rThread->setName(moduleName);
     rThread->start();
@@ -87,7 +87,7 @@ bool objectpropertyextractorModule::configure(yarp::os::ResourceFinder &rf) {
     // so that it will then run the module
 }
 
-bool objectpropertyextractorModule::close() {
+bool ObjectpropertyExtractorModule::close() {
     handlerPort.close();
     /* stop the thread */
     yInfo("stopping the thread \n");
@@ -96,13 +96,13 @@ bool objectpropertyextractorModule::close() {
     return true;
 }
 
-bool objectpropertyextractorModule::interruptModule() {
+bool ObjectpropertyExtractorModule::interruptModule() {
     handlerPort.interrupt();
     return true;
 }
 
 
-bool objectpropertyextractorModule::respond(const Bottle &command, Bottle &reply) {
+bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply) {
     vector <string> replyScript;
     string helpMessage = string(getName().c_str()) +
                          " commands are: \n" +
@@ -195,11 +195,11 @@ bool objectpropertyextractorModule::respond(const Bottle &command, Bottle &reply
 }
 
 /* Called periodically every getPeriod() seconds */
-bool objectpropertyextractorModule::updateModule() {
+bool ObjectpropertyExtractorModule::updateModule() {
     return true;
 }
 
-double objectpropertyextractorModule::getPeriod() {
+double ObjectpropertyExtractorModule::getPeriod() {
     /* module periodicity (seconds), called implicitly by myModule */
     return 1.0;
 }

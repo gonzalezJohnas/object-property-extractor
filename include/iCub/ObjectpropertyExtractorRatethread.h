@@ -44,7 +44,7 @@
 
 
 using  cv::Mat;
-class objectpropertyextractorRatethread : public yarp::os::RateThread {
+class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
 private:
     bool result;                    //result of the processing
 
@@ -64,18 +64,18 @@ public:
     /**
     * constructor default
     */
-    objectpropertyextractorRatethread();
+    ObjectpropertyExtractorRatethread();
 
     /**
     * constructor 
     * @param robotname name of the robot
     */
-    objectpropertyextractorRatethread(std::string robotname, std::string configFile);
+    ObjectpropertyExtractorRatethread(std::string robotname, std::string configFile);
 
     /**
      * destructor
      */
-    ~objectpropertyextractorRatethread();
+    ~ObjectpropertyExtractorRatethread();
 
     /**
     *  initialises the thread
@@ -132,7 +132,7 @@ public:
      * Function to get the Dominant color of the input image
      */
 
-    std::string getDominantColor(Mat inputImage);
+    std::string getDominantColor(const Mat inputImage);
 
     /**
      * Function to get the center position in 2D referencial of input Image

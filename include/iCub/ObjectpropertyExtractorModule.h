@@ -134,7 +134,7 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Thread.h>
-#include <iCub/objectpropertyextractorRatethread.h>
+#include "iCub/ObjectpropertyExtractorRatethread.h"
 #include <opencv2/opencv.hpp>
 
 
@@ -150,7 +150,7 @@
 #define COMMAND_VOCAB_FAILED             VOCAB4('f','a','i','l')
 
 
-class objectpropertyextractorModule:public yarp::os::RFModule {
+class ObjectpropertyExtractorModule:public yarp::os::RFModule {
 
 
     std::string moduleName;                  // name of the module
@@ -161,7 +161,7 @@ class objectpropertyextractorModule:public yarp::os::RFModule {
     yarp::os::Port handlerPort;              // a port to handle messages
     yarp::os::Semaphore mutex;                  // semaphore for the respond function
 
-    objectpropertyextractorRatethread *rThread;             // pointer to a new thread to be created and started in configure() and stopped in close()
+    ObjectpropertyExtractorRatethread *rThread;             // pointer to a new thread to be created and started in configure() and stopped in close()
 
 public:
     /**

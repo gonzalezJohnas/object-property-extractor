@@ -1,5 +1,5 @@
 #include <iostream>
-#include <iCub/objectpropertyextractorModule.h>
+#include "iCub/ObjectpropertyExtractorModule.h"
 
 
 using namespace yarp::os;
@@ -9,7 +9,7 @@ using namespace yarp::sig;
 int main(int argc, char *argv[]) {
 
     Network yarp;
-    objectpropertyextractorModule module;
+    ObjectpropertyExtractorModule module;
     ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefaultConfigFile("objectpropertyextractor.ini");      //overridden by --from parameter

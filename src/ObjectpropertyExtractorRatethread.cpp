@@ -22,7 +22,7 @@
  * @brief Implementation of the eventDriven thread (see objectpropertyextractorRatethreadRatethread.h).
  */
 
-#include <iCub/objectpropertyextractorRatethread.h>
+#include <iCub/ObjectpropertyExtractorRatethread.h>
 
 using namespace yarp::dev;
 using namespace yarp::os;
@@ -34,13 +34,13 @@ using namespace cv;
 
 //********************interactionEngineRatethread******************************************************
 
-objectpropertyextractorRatethread::objectpropertyextractorRatethread() : RateThread(THRATE) {
+ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread() : RateThread(THRATE) {
     robot = "icub";
     inputImage          = new ImageOf<PixelRgb>;
 
 }
 
-objectpropertyextractorRatethread::objectpropertyextractorRatethread(string _robot, string _configFile) : RateThread(
+ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _robot, string _configFile) : RateThread(
         THRATE) {
     robot = _robot;
     configFile = _configFile;
@@ -48,11 +48,11 @@ objectpropertyextractorRatethread::objectpropertyextractorRatethread(string _rob
 
 }
 
-objectpropertyextractorRatethread::~objectpropertyextractorRatethread() {
+ObjectpropertyExtractorRatethread::~ObjectpropertyExtractorRatethread() {
     // do nothing
 }
 
-bool objectpropertyextractorRatethread::threadInit() {
+bool ObjectpropertyExtractorRatethread::threadInit() {
 
 
     yInfo("Initialization of the processing thread correctly ended");
@@ -70,22 +70,22 @@ bool objectpropertyextractorRatethread::threadInit() {
     return true;
 }
 
-void objectpropertyextractorRatethread::setName(string str) {
+void ObjectpropertyExtractorRatethread::setName(string str) {
     this->name = str;
 }
 
 
-std::string objectpropertyextractorRatethread::getName(const char *p) {
+std::string ObjectpropertyExtractorRatethread::getName(const char *p) {
     string str(name);
     str.append(p);
     return str;
 }
 
-void objectpropertyextractorRatethread::setInputPortName(string InpPort) {
+void ObjectpropertyExtractorRatethread::setInputPortName(string InpPort) {
 
 }
 
-void objectpropertyextractorRatethread::run() {
+void ObjectpropertyExtractorRatethread::run() {
     inputImage  = imagePortIn.read(true);
 
     if(inputImage != NULL){
@@ -97,7 +97,7 @@ void objectpropertyextractorRatethread::run() {
 
 
 
-void objectpropertyextractorRatethread::threadRelease() {
+void ObjectpropertyExtractorRatethread::threadRelease() {
     yDebug("Release thread");
 
     this->featuresPortOut.interrupt();
@@ -111,11 +111,11 @@ void objectpropertyextractorRatethread::threadRelease() {
 
 //*********************************************************************************************************************
 //Core functions
-cv::Point3d objectpropertyextractorRatethread::getCoordinateWorld(Point2f centerPoint) {
+cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f centerPoint) {
     return cv::Point3d(0, 0, 0);
 }
 
-std::string objectpropertyextractorRatethread::getDominantColor(Mat t_src) {
+std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
 
     Scalar avgValue = mean(t_src);
@@ -167,17 +167,17 @@ std::string objectpropertyextractorRatethread::getDominantColor(Mat t_src) {
 
 }
 
-cv::Point2f objectpropertyextractorRatethread::getCenter2DPosition(Mat t_src) {
+cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition(Mat t_src) {
     return cv::Point2f(t_src.cols/2, t_src.rows/2);
 }
 
-const int objectpropertyextractorRatethread::getPixelSize(Mat t_src) {
+const int ObjectpropertyExtractorRatethread::getPixelSize(Mat t_src) {
 
 
     return (int) round(sqrt(pow(t_src.cols,2) + pow(t_src.rows,2)));
 }
 
-void objectpropertyextractorRatethread::extractFeatures(Mat t_inputImage) {
+void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
