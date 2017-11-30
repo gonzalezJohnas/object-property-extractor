@@ -27,9 +27,9 @@
 #define _objectpropertyextractor_RATETHREAD_H_
 
 
-#include <yarp/sig/all.h>
-#include <yarp/os/all.h>
 #include <yarp/dev/all.h>
+#include <yarp/os/all.h>
+#include <yarp/sig/all.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/Bottle.h>
@@ -54,23 +54,34 @@ private:
     std::string name;               // rootname of all the ports opened by this thread
 
     yarp::sig::ImageOf<yarp::sig::PixelRgb>* inputImage;
-    cv::Mat  inputImageMat;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb>*  leftImage;
+    yarp::sig::ImageOf<yarp::sig::PixelRgb>*  rightImage;
 
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > imagePortIn;
+    cv::Mat  inputImageMat,  leftImageMat, rightImageMat;
+
+
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
+    yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
+    yarp::os::BufferedPort<yarp::os::Bottle> input3DPosition;
+
+
     yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
 
 
+
 public:
+
+
     /**
     * constructor default
     */
-    ObjectpropertyExtractorRatethread();
+    ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
 
     /**
     * constructor 
     * @param robotname name of the robot
     */
-    ObjectpropertyExtractorRatethread(std::string robotname, std::string configFile);
+    ObjectpropertyExtractorRatethread(std::string robotname, std::string configFile, yarp::os::ResourceFinder &rf);
 
     /**
      * destructor
@@ -122,6 +133,8 @@ public:
      */
 
     void extractFeatures(Mat inputImage);
+
+
     /**
      * Function that return 3D world coordinate from 2D points
      */
@@ -129,10 +142,20 @@ public:
     cv::Point3d getCoordinateWorld(cv::Point2f centerPoint);
 
     /**
-     * Function to get the Dominant color of the input image
+     * Function to get the name of the Dominant color of the input image
      */
 
     std::string getDominantColor(const Mat inputImage);
+
+
+    /**
+     * Function to get the dominant color susing KMeans algorithm
+     * @param inputImage
+     * @param numberClusters
+     * @return Matrix of the computed culster centers in BGR format
+     */
+
+    cv::Mat getDominantColorKMeans(const Mat inputImage, const int numberClusters);
 
     /**
      * Function to get the center position in 2D referencial of input Image
@@ -145,6 +168,8 @@ public:
      */
 
     const int getPixelSize(Mat inputImage);
+
+
 
 
 };

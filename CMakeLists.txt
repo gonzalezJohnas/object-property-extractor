@@ -12,6 +12,8 @@ find_package(OpenCV REQUIRED)
 find_package(ICUB REQUIRED)
 
 
+add_subdirectory(app)
+
 #search for includes
 INCLUDE_DIRECTORIES(
         ${PROJECT_SOURCE_DIR}/include
@@ -23,8 +25,8 @@ INCLUDE_DIRECTORIES(
 )
 
 # Search for source code.
-FILE(GLOB folder_source src/*.cpp src/*.cc src/*.c)
-FILE(GLOB folder_header include/iCub/*.h)
+FILE(GLOB folder_source src/*.cpp src/*.cc src/*.c )
+FILE(GLOB folder_header include/iCub/*.h )
 SOURCE_GROUP("Source Files" FILES ${folder_source})
 SOURCE_GROUP("Header Files" FILES ${folder_header})
 

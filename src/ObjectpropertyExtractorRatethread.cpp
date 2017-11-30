@@ -22,7 +22,7 @@
  * @brief Implementation of the eventDriven thread (see objectpropertyextractorRatethreadRatethread.h).
  */
 
-#include <iCub/ObjectpropertyExtractorRatethread.h>
+#include "iCub/ObjectpropertyExtractorRatethread.h"
 
 using namespace yarp::dev;
 using namespace yarp::os;
@@ -34,22 +34,24 @@ using namespace cv;
 
 //********************interactionEngineRatethread******************************************************
 
-ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread() : RateThread(THRATE) {
+ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf) : RateThread(THRATE) {
     robot = "icub";
     inputImage          = new ImageOf<PixelRgb>;
 
+
 }
 
-ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _robot, string _configFile) : RateThread(
+ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _robot, string _configFile, yarp::os::ResourceFinder &rf) : RateThread(
         THRATE) {
     robot = _robot;
     configFile = _configFile;
-    inputImage          = new ImageOf<PixelRgb>;
+    inputImage = new ImageOf<PixelRgb>;
+
+
 
 }
 
 ObjectpropertyExtractorRatethread::~ObjectpropertyExtractorRatethread() {
-    // do nothing
 }
 
 bool ObjectpropertyExtractorRatethread::threadInit() {
@@ -57,7 +59,7 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
 
     yInfo("Initialization of the processing thread correctly ended");
 
-    if (!imagePortIn.open(getName("/imageRGB:i").c_str())) {
+    if (!templateImagePort.open(getName("/imageRGB:i").c_str())) {
         cout <<": unable to open port /imageRGB:i "  << endl;
         return false;  // unable to open; let RFModule know so that it won't run
     }
@@ -66,6 +68,17 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
         cout <<": unable to open port /features:o"  << endl;
         return false;  // unable to open; let RFModule know so that it won't run
     }
+
+    if (!input2DPosition.open(getName("/position2D:i").c_str())) {
+        cout <<": unable to open port /position2D:i"  << endl;
+        return false;  // unable to open; let RFModule know so that it won't run
+    }
+
+    if (!input3DPosition.open(getName("/position3D:i").c_str())) {
+        cout <<": unable to open port /position3D:i"  << endl;
+        return false;  // unable to open; let RFModule know so that it won't run
+    }
+
 
     return true;
 }
@@ -86,25 +99,32 @@ void ObjectpropertyExtractorRatethread::setInputPortName(string InpPort) {
 }
 
 void ObjectpropertyExtractorRatethread::run() {
-    inputImage  = imagePortIn.read(true);
+    inputImage  = templateImagePort.read(true);
+
 
     if(inputImage != NULL){
 
         inputImageMat = cvarrToMat(inputImage->getIplImage());
         cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
+
     }
+
+
+
 }
 
 
 
 void ObjectpropertyExtractorRatethread::threadRelease() {
-    yDebug("Release thread");
+    yInfo("Releasing thread");
+
+
 
     this->featuresPortOut.interrupt();
-    this->imagePortIn.interrupt();
+    this->templateImagePort.interrupt();
 
     this->featuresPortOut.close();
-    this->imagePortIn.close();
+    this->templateImagePort.close();
 }
 
 
@@ -112,24 +132,32 @@ void ObjectpropertyExtractorRatethread::threadRelease() {
 //*********************************************************************************************************************
 //Core functions
 cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f centerPoint) {
-    return cv::Point3d(0, 0, 0);
+
+
+
+    return cv::Point3d() ;
 }
 
 std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
 
-    Scalar avgValue = mean(t_src);
+    Mat centers = getDominantColorKMeans(t_src, 2);
+    Mat colorValue = centers.row(0);
+
+    if(centers.at<float>(0,0) == 0 && centers.at<float>(0,1) == 0 && centers.at<float>(0,2) == 0 ){
+        colorValue = centers.row(1);
+    }
 
     double max, min;
     Point minIndex, maxIndex;
-    minMaxLoc(avgValue, &min, &max, &minIndex, &maxIndex);
+    minMaxLoc(colorValue, &min, &max, &minIndex, &maxIndex);
 
-    const double red = avgValue[0, 2];
-    const double green = avgValue[0, 1];
-    const double blue = avgValue[0, 0];
+    const float red = colorValue.at<float>(0, 2);
+    const float green = colorValue.at<float>(0, 1);
+    const float blue = colorValue.at<float>(0, 0);
 
     //Blue max value
-    if (maxIndex.y == 0) {
+    if (maxIndex.x == 0) {
         if (red > 150 && blue > 150) {
             return "purple";
         }
@@ -142,13 +170,13 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
     }
 
     //Green max value
-    else if (maxIndex.y == 1) {
+    else if (maxIndex.x == 1) {
            return "green";
         }
 
 
     //Red max value
-    else if (maxIndex.y == 2){
+    else if (maxIndex.x == 2){
         if(green > 200 ){
             return "yellow";
         }
@@ -168,11 +196,16 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 }
 
 cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition(Mat t_src) {
+
+    Bottle *inputBottle2DPosition = input2DPosition.read();
+    if( inputBottle2DPosition != NULL){
+
+    }
+
     return cv::Point2f(t_src.cols/2, t_src.rows/2);
 }
 
 const int ObjectpropertyExtractorRatethread::getPixelSize(Mat t_src) {
-
 
     return (int) round(sqrt(pow(t_src.cols,2) + pow(t_src.rows,2)));
 }
@@ -187,7 +220,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
     const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
     const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
 
-    const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
+    const Point3f worldPoint = this->getCoordinateWorld(Point2f(160,120));
     const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
 
     features.addString(color);
@@ -198,6 +231,24 @@ void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
 
     featuresPortOut.write();
 
+}
+
+cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {
+
+    // Parameters for Kmeans
+    const int numberOfAttempts = 10;
+    const int numberOfSteps = 10000;
+    const float stopCriterion = 0.0001;
+    Mat centers, labels, samples;
+    TermCriteria kmeansCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, numberOfSteps, stopCriterion);
+
+    // Process the inputImage to match the requirement of Kmeans input
+    inputImage.convertTo(samples, CV_32F);
+    samples = samples.reshape(3, inputImage.rows * inputImage.cols);
+
+    kmeans(samples, numberOfClusters, labels, kmeansCriteria, numberOfAttempts, KMEANS_PP_CENTERS, centers );
+
+    return centers;
 }
 
 

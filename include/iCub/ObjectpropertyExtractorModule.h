@@ -148,6 +148,7 @@
 
 #define COMMAND_VOCAB_HELP               VOCAB4('h','e','l','p')
 #define COMMAND_VOCAB_FAILED             VOCAB4('f','a','i','l')
+#define COMMAND_VOCAB_FEATURES           VOCAB4('f','e','a','t')
 
 
 class ObjectpropertyExtractorModule:public yarp::os::RFModule {
@@ -176,7 +177,7 @@ public:
     bool interruptModule();
 
     /**
-    *  close and shut down 
+    *  close and shut down
     */
     bool close();
 

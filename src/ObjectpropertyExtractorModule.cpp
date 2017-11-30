@@ -79,10 +79,15 @@ bool ObjectpropertyExtractorModule::configure(yarp::os::ResourceFinder &rf) {
 
 
 
-    rThread = new ObjectpropertyExtractorRatethread();
+    rThread = new ObjectpropertyExtractorRatethread(rf);
+
+
     /*pass the name of the module in order to create ports*/
     rThread->setName(moduleName);
     rThread->start();
+    rThread->run();
+
+
     return true;       // let the RFModule know everything went well
     // so that it will then run the module
 }
@@ -103,7 +108,7 @@ bool ObjectpropertyExtractorModule::interruptModule() {
 
 
 bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply) {
-    vector <string> replyScript;
+    vector<string> replyScript;
     string helpMessage = string(getName().c_str()) +
                          " commands are: \n" +
                          "help \n" +
@@ -148,9 +153,14 @@ bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply
             {
                 switch (command.get(1).asVocab()) {
 
-                    default:
+                    case COMMAND_VOCAB_FEATURES: {
                         cv::Mat lr = rThread->getInputImage();
                         rThread->extractFeatures(lr);
+                        ok = true;
+                        break;
+                    }
+
+                    default:
                         cout << "received an unknown request after a GET" << endl;
                         break;
                 }
