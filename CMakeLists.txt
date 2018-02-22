@@ -3,7 +3,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
 cmake_minimum_required(VERSION 2.6)
-SET(KEYWORD "objectpropertyextractor")
+SET(KEYWORD "objectPropertyExtractor")
 PROJECT(${KEYWORD})
 set(CMAKE_CXX_STANDARD 11)
 
@@ -42,6 +42,7 @@ IF (folder_source)
     TARGET_LINK_LIBRARIES( ${KEYWORD}
             ${YARP_LIBRARIES}
             ${OpenCV_LIBRARIES}
+            fftw3
             )
 
     INSTALL_TARGETS(/bin ${KEYWORD})

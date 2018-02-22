@@ -22,6 +22,8 @@
  * @brief Implementation of the eventDriven thread (see objectpropertyextractorRatethreadRatethread.h).
  */
 
+#include <utility>
+
 #include "iCub/ObjectpropertyExtractorRatethread.h"
 
 using namespace yarp::dev;
@@ -36,23 +38,18 @@ using namespace cv;
 
 ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf) : RateThread(THRATE) {
     robot = "icub";
-    inputImage          = new ImageOf<PixelRgb>;
-
-
-}
-
-ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _robot, string _configFile, yarp::os::ResourceFinder &rf) : RateThread(
-        THRATE) {
-    robot = _robot;
-    configFile = _configFile;
     inputImage = new ImageOf<PixelRgb>;
 
+}
 
+ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _robot, yarp::os::ResourceFinder &rf) : RateThread(
+        THRATE) {
+    robot = std::move(_robot);
+    inputImage = new ImageOf<PixelRgb>;
 
 }
 
-ObjectpropertyExtractorRatethread::~ObjectpropertyExtractorRatethread() {
-}
+ObjectpropertyExtractorRatethread::~ObjectpropertyExtractorRatethread() = default;
 
 bool ObjectpropertyExtractorRatethread::threadInit() {
 
@@ -74,17 +71,18 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
         return false;  // unable to open; let RFModule know so that it won't run
     }
 
-    if (!input3DPosition.open(getName("/position3D:i").c_str())) {
-        cout <<": unable to open port /position3D:i"  << endl;
+    if (!get3DPosition.open(getName("/getPosition3D").c_str())) {
+        cout <<": unable to open port /getPosition3D"  << endl;
         return false;  // unable to open; let RFModule know so that it won't run
     }
+
 
 
     return true;
 }
 
 void ObjectpropertyExtractorRatethread::setName(string str) {
-    this->name = str;
+    this->name = std::move(str);
 }
 
 
@@ -102,7 +100,7 @@ void ObjectpropertyExtractorRatethread::run() {
     inputImage  = templateImagePort.read(true);
 
 
-    if(inputImage != NULL){
+    if(inputImage != nullptr){
 
         inputImageMat = cvarrToMat(inputImage->getIplImage());
         cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
@@ -118,8 +116,6 @@ void ObjectpropertyExtractorRatethread::run() {
 void ObjectpropertyExtractorRatethread::threadRelease() {
     yInfo("Releasing thread");
 
-
-
     this->featuresPortOut.interrupt();
     this->templateImagePort.interrupt();
 
@@ -133,9 +129,22 @@ void ObjectpropertyExtractorRatethread::threadRelease() {
 //Core functions
 cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f centerPoint) {
 
+    yarp::os::Bottle cmd, reply;
+    cv::Point3d PositionWorld;
+    cmd.clear();
+    cmd.addString("Root");
+    cmd.addInt(static_cast<int>(centerPoint.x));
+    cmd.addInt(static_cast<int>(centerPoint.y));
 
+    if(get3DPosition.getOutputCount()){
+        get3DPosition.write(cmd, reply);
+        PositionWorld.x = reply.get(0).asInt();
+        PositionWorld.y = reply.get(1).asInt();
+        PositionWorld.z = reply.get(2).asInt();
 
-    return cv::Point3d() ;
+    }
+
+    return PositionWorld;
 }
 
 std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
@@ -198,7 +207,10 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition(Mat t_src) {
 
     Bottle *inputBottle2DPosition = input2DPosition.read();
-    if( inputBottle2DPosition != NULL){
+    if( inputBottle2DPosition != nullptr){
+        const int xPosition = inputBottle2DPosition->get(1).asInt();
+        const int yPosition = inputBottle2DPosition->get(2).asInt();
+        return cv::Point2f(xPosition, yPosition);
 
     }
 

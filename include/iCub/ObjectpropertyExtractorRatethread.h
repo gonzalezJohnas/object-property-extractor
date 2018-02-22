@@ -50,22 +50,23 @@ private:
 
 
     std::string robot;              // name of the robot
-    std::string configFile;         // name of the configFile where the parameter of the camera are set
     std::string name;               // rootname of all the ports opened by this thread
 
+
+
+    // Image objects
     yarp::sig::ImageOf<yarp::sig::PixelRgb>* inputImage;
-    yarp::sig::ImageOf<yarp::sig::PixelRgb>*  leftImage;
-    yarp::sig::ImageOf<yarp::sig::PixelRgb>*  rightImage;
-
-    cv::Mat  inputImageMat,  leftImageMat, rightImageMat;
 
 
+    // Yarp port of the Thread
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
     yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
-    yarp::os::BufferedPort<yarp::os::Bottle> input3DPosition;
-
-
     yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
+    yarp::os::Port get3DPosition;
+
+    // Local variables for processing
+    cv::Mat  inputImageMat;
+
 
 
 
@@ -75,33 +76,33 @@ public:
     /**
     * constructor default
     */
-    ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
+    explicit ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
 
     /**
     * constructor 
     * @param robotname name of the robot
     */
-    ObjectpropertyExtractorRatethread(std::string robotname, std::string configFile, yarp::os::ResourceFinder &rf);
+    ObjectpropertyExtractorRatethread(std::string robotname, yarp::os::ResourceFinder &rf);
 
     /**
      * destructor
      */
-    ~ObjectpropertyExtractorRatethread();
+    ~ObjectpropertyExtractorRatethread() override;
 
     /**
     *  initialises the thread
     */
-    bool threadInit();
+    bool threadInit() override;
 
     /**
     *  correctly releases the thread
     */
-    void threadRelease();
+    void threadRelease() override;
 
     /**
     *  active part of the thread
     */
-    void run();
+    void run() override;
 
     /**
     * function that sets the rootname of all the ports that are going to be created by the thread
@@ -145,7 +146,7 @@ public:
      * Function to get the name of the Dominant color of the input image
      */
 
-    std::string getDominantColor(const Mat inputImage);
+    std::string getDominantColor(Mat inputImage);
 
 
     /**
@@ -155,7 +156,7 @@ public:
      * @return Matrix of the computed culster centers in BGR format
      */
 
-    cv::Mat getDominantColorKMeans(const Mat inputImage, const int numberClusters);
+    cv::Mat getDominantColorKMeans( Mat inputImage,  int numberClusters);
 
     /**
      * Function to get the center position in 2D referencial of input Image
