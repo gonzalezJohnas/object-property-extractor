@@ -21,7 +21,7 @@
     </connection>
 
     <connection>
-        <from>/zeroDisparityFilter/geometry</from>
+        <from>/zeroDisparityFilter/geometry:o</from>
         <to>/objectPropertyExtractor/position2D:i</to>
     </connection>
 

@@ -103,7 +103,7 @@ void ObjectpropertyExtractorRatethread::run() {
     if(inputImage != nullptr){
 
         inputImageMat = cvarrToMat(inputImage->getIplImage());
-        //cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
+//        cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
 
     }
 
@@ -132,7 +132,7 @@ cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f center
 
 
     yarp::os::Bottle cmd, reply;
-    cv::Point3f PositionWorld;
+    cv::Point3d PositionWorld;
     cmd.clear();
     cmd.addString("Root");
     cmd.addInt(static_cast<int>(centerPoint.x));
@@ -164,9 +164,9 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
     Point minIndex, maxIndex;
     minMaxLoc(colorValue, &min, &max, &minIndex, &maxIndex);
 
-    const float red = colorValue.at<float>(0, 0);
-    const float green = colorValue.at<float>(0, 1);
-    const float blue = colorValue.at<float>(0, 2);
+    const int red = static_cast<const int>(colorValue.at< float>(0, 0) * 2550);
+    const int green = static_cast<const int>(colorValue.at< float>(0, 1) * 255);
+    const int  blue = static_cast<const int>(colorValue.at<float>(0, 2) * 255);
 
     cout << red << " " << green << " " << blue << endl;
 
@@ -227,7 +227,9 @@ const int ObjectpropertyExtractorRatethread::getPixelSize(Mat t_src) {
     return (int) round(sqrt(pow(t_src.cols,2) + pow(t_src.rows,2)));
 }
 
-void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
+void ObjectpropertyExtractorRatethread::extractFeatures() {
+
+    const Mat t_inputImage = this ->getInputImage();
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
@@ -241,10 +243,11 @@ void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
     const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
 
     cout << "POS 2D " << centerPoint.x << endl;
+
     const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
     const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
 
-   std::cout << " 3D position" << pos3D <<  std::endl;
+    cout << " 3D position" << pos3D <<  std::endl;
     
 
     features.addString(color);

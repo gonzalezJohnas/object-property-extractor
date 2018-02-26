@@ -145,6 +145,8 @@
 #define COMMAND_VOCAB_GET                VOCAB3('g','e','t')
 #define COMMAND_VOCAB_SUSPEND            VOCAB3('s','u','s')
 #define COMMAND_VOCAB_RES                VOCAB3('r','e','s')
+#define COMMAND_VOCAB_COLOR              VOCAB3('c','o','l')
+
 
 #define COMMAND_VOCAB_HELP               VOCAB4('h','e','l','p')
 #define COMMAND_VOCAB_FAILED             VOCAB4('f','a','i','l')

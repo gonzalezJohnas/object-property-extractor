@@ -133,7 +133,7 @@ public:
      * Function that extract all the features
      */
 
-    void extractFeatures(Mat inputImage);
+    void extractFeatures();
 
 
     /**

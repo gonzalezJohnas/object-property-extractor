@@ -154,9 +154,15 @@ bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply
                 switch (command.get(1).asVocab()) {
 
                     case COMMAND_VOCAB_FEATURES: {
-                        cv::Mat lr = rThread->getInputImage();
-                        rThread->extractFeatures(lr);
+                        rThread->extractFeatures();
                         ok = true;
+                        break;
+                    }
+
+                    case COMMAND_VOCAB_COLOR : {
+                        const string dominantColor = rThread->getDominantColor(rThread->getInputImage());
+                        reply.addString("color is " + dominantColor);
+                        ok = true ;
                         break;
                     }
 
