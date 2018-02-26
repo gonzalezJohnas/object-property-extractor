@@ -103,7 +103,7 @@ void ObjectpropertyExtractorRatethread::run() {
     if(inputImage != nullptr){
 
         inputImageMat = cvarrToMat(inputImage->getIplImage());
-        cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
+        //cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
 
     }
 
@@ -129,8 +129,10 @@ void ObjectpropertyExtractorRatethread::threadRelease() {
 //Core functions
 cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f centerPoint) {
 
+
+
     yarp::os::Bottle cmd, reply;
-    cv::Point3d PositionWorld;
+    cv::Point3f PositionWorld;
     cmd.clear();
     cmd.addString("Root");
     cmd.addInt(static_cast<int>(centerPoint.x));
@@ -138,9 +140,10 @@ cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f center
 
     if(get3DPosition.getOutputCount()){
         get3DPosition.write(cmd, reply);
-        PositionWorld.x = reply.get(0).asInt();
-        PositionWorld.y = reply.get(1).asInt();
-        PositionWorld.z = reply.get(2).asInt();
+
+        PositionWorld.x = reply.get(0).asDouble();
+        PositionWorld.y = reply.get(1).asDouble();
+        PositionWorld.z = reply.get(2).asDouble();
 
     }
 
@@ -161,12 +164,14 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
     Point minIndex, maxIndex;
     minMaxLoc(colorValue, &min, &max, &minIndex, &maxIndex);
 
-    const float red = colorValue.at<float>(0, 2);
+    const float red = colorValue.at<float>(0, 0);
     const float green = colorValue.at<float>(0, 1);
-    const float blue = colorValue.at<float>(0, 0);
+    const float blue = colorValue.at<float>(0, 2);
+
+    cout << red << " " << green << " " << blue << endl;
 
     //Blue max value
-    if (maxIndex.x == 0) {
+    if (maxIndex.x == 2) {
         if (red > 150 && blue > 150) {
             return "purple";
         }
@@ -185,7 +190,7 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
 
     //Red max value
-    else if (maxIndex.x == 2){
+    else if (maxIndex.x == 0){
         if(green > 200 ){
             return "yellow";
         }
@@ -208,8 +213,8 @@ cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition(Mat t_src) {
 
     Bottle *inputBottle2DPosition = input2DPosition.read();
     if( inputBottle2DPosition != nullptr){
-        const int xPosition = inputBottle2DPosition->get(1).asInt();
-        const int yPosition = inputBottle2DPosition->get(2).asInt();
+        const int xPosition = inputBottle2DPosition->get(0).asInt();
+        const int yPosition = inputBottle2DPosition->get(1).asInt();
         return cv::Point2f(xPosition, yPosition);
 
     }
@@ -228,12 +233,19 @@ void ObjectpropertyExtractorRatethread::extractFeatures(Mat t_inputImage) {
 
 
     const string color = "( color "+this->getDominantColor(t_inputImage)+" )";
+
+    cout << "Color " <<  color << endl;
+
     const Point2f centerPoint = this->getCenter2DPosition(t_inputImage);
     const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
     const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
 
-    const Point3f worldPoint = this->getCoordinateWorld(Point2f(160,120));
+    cout << "POS 2D " << centerPoint.x << endl;
+    const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
     const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
+
+   std::cout << " 3D position" << pos3D <<  std::endl;
+    
 
     features.addString(color);
     features.addString(pos2D);
@@ -249,7 +261,7 @@ cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inpu
 
     // Parameters for Kmeans
     const int numberOfAttempts = 10;
-    const int numberOfSteps = 10000;
+    const int numberOfSteps = 1000;
     const float stopCriterion = 0.0001;
     Mat centers, labels, samples;
     TermCriteria kmeansCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, numberOfSteps, stopCriterion);
