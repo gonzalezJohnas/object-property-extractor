@@ -97,16 +97,17 @@ void ObjectpropertyExtractorRatethread::setInputPortName(string InpPort) {
 }
 
 void ObjectpropertyExtractorRatethread::run() {
-    inputImage  = templateImagePort.read(true);
+    inputImage  = templateImagePort.read();
 
 
     if(inputImage != nullptr){
 
         inputImageMat = cvarrToMat(inputImage->getIplImage());
-//        cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
+//      cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
 
     }
-
+    
+    
 
 
 }
@@ -150,47 +151,36 @@ cv::Point3d ObjectpropertyExtractorRatethread::getCoordinateWorld(Point2f center
     return PositionWorld;
 }
 
+
+
+
+
+
 std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
 
     Mat centers = getDominantColorKMeans(t_src, 2);
-    Mat colorValue = centers.row(0);
+    auto colorValue = centers.ptr<float>(0);
 
-    if(centers.at<float>(0,0) == 0 && centers.at<float>(0,1) == 0 && centers.at<float>(0,2) == 0 ){
-        colorValue = centers.row(1);
+    
+    if( ((int)colorValue[0]) == 0 || ((int)colorValue[1]) == 0 || ((int)colorValue[2]) == 0  ){
+        cout << "Change centers " << colorValue[0] << " " << colorValue[1] << " " << colorValue[2] << endl;
+        colorValue = centers.ptr<float>(1);
     }
 
     double max, min;
     Point minIndex, maxIndex;
-    minMaxLoc(colorValue, &min, &max, &minIndex, &maxIndex);
+    minMaxLoc(centers, &min, &max, &minIndex, &maxIndex);
 
-    const int red = static_cast<const int>(colorValue.at< float>(0, 0) * 2550);
-    const int green = static_cast<const int>(colorValue.at< float>(0, 1) * 255);
-    const int  blue = static_cast<const int>(colorValue.at<float>(0, 2) * 255);
+    const int red = colorValue[0];
+    const int green = colorValue[1];
+    const int blue = colorValue[2];
 
-    cout << red << " " << green << " " << blue << endl;
-
-    //Blue max value
-    if (maxIndex.x == 2) {
-        if (red > 150 && blue > 150) {
-            return "purple";
-        }
-        else if (red > 150 && blue < 150) {
-            return "pink";
-        }
-        else{
-            return "blue";
-        }
-    }
-
-    //Green max value
-    else if (maxIndex.x == 1) {
-           return "green";
-        }
+    //cout << red << " " << green << " " << blue << "Max index " << maxIndex.x << endl;
 
 
-    //Red max value
-    else if (maxIndex.x == 0){
+     //Blue max value
+    if (maxIndex.x == 0) {
         if(green > 200 ){
             return "yellow";
         }
@@ -205,7 +195,28 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
     }
 
-    return "unknown color";
+    //Green max value
+    else if (maxIndex.x == 1) {
+           return "green";
+        }
+
+
+    //Red max value
+    else if (maxIndex.x == 2){
+        if (red > 140 && blue > 150) {
+            return "purple";
+        }
+        else if (red > 150 && blue < 150) {
+            return "pink";
+        }
+        else{
+            return "blue";
+        }
+
+    }
+
+
+    return "white";
 
 }
 
@@ -263,7 +274,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {
 
     // Parameters for Kmeans
-    const int numberOfAttempts = 10;
+    const int numberOfAttempts = 20;
     const int numberOfSteps = 1000;
     const float stopCriterion = 0.0001;
     Mat centers, labels, samples;
