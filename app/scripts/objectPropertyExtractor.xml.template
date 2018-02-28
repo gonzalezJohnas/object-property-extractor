@@ -9,6 +9,7 @@
     </module>
 
 
+
     <!-- Connections  -->
     <connection>
         <from>/objectPropertyExtractor/getPosition3D</from>
@@ -16,12 +17,12 @@
     </connection>
 
     <connection>
-        <from>/zeroDisparityFilter/imageTemp:o</from>
+        <from>/zeroDisparityFilterMod/imageTemp:o</from>
         <to>/objectPropertyExtractor/imageRGB:i</to>
     </connection>
 
     <connection>
-        <from>/zeroDisparityFilter/geometry:o</from>
+        <from>/zeroDisparityFilterMod/geometry:o</from>
         <to>/objectPropertyExtractor/position2D:i</to>
     </connection>
 
