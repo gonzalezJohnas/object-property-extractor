@@ -220,17 +220,25 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
 }
 
-cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition(Mat t_src) {
+cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
 
     Bottle *inputBottle2DPosition = input2DPosition.read();
     if( inputBottle2DPosition != nullptr){
-        const int xPosition = inputBottle2DPosition->get(0).asInt();
-        const int yPosition = inputBottle2DPosition->get(1).asInt();
-        return cv::Point2f(xPosition, yPosition);
+        const int xPositionTopLeft = inputBottle2DPosition->get(0).asInt();
+        const int yPositionTopLeft = inputBottle2DPosition->get(1).asInt();
+
+        const int xPositionBottomRight = inputBottle2DPosition->get(2).asInt();
+        const int yPositionBottomRight = inputBottle2DPosition->get(3).asInt();
+
+        const int width = xPositionBottomRight - xPositionTopLeft;
+        const int height = yPositionBottomRight - yPositionTopLeft;
+
+
+        return cv::Point2f(xPositionTopLeft + (width / 2), yPositionTopLeft + (height /  2));
 
     }
 
-    return cv::Point2f(t_src.cols/2, t_src.rows/2);
+    return cv::Point2f(0, 0);
 }
 
 const int ObjectpropertyExtractorRatethread::getPixelSize(Mat t_src) {
@@ -249,11 +257,11 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
     cout << "Color " <<  color << endl;
 
-    const Point2f centerPoint = this->getCenter2DPosition(t_inputImage);
+    const Point2f centerPoint = this->getCenter2DPosition();
     const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
-    const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
+    //const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
 
-    cout << "POS 2D " << centerPoint.x << endl;
+    cout << "POS 2D " << centerPoint.x << " " << centerPoint.y << endl;
 
     const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
     const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
@@ -263,7 +271,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
     features.addString(color);
     features.addString(pos2D);
-    features.addString(size);
+    //features.addString(size);
     features.addString(pos3D);
 
 

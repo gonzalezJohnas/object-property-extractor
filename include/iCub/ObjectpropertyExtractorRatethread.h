@@ -162,7 +162,7 @@ public:
      * Function to get the center position in 2D referencial of input Image
      */
 
-    cv::Point2f getCenter2DPosition(Mat inputImage);
+    cv::Point2f getCenter2DPosition();
 
     /**
      * Function to get the pixel size  in 2D referencial of input Image
