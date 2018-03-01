@@ -39,7 +39,7 @@ using namespace cv;
 ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf) : RateThread(THRATE) {
     robot = "icub";
     inputImage = new ImageOf<PixelRgb>;
-    cannyThreshold = 20;
+    cannyThreshold = 10;
 
 }
 
@@ -48,7 +48,7 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _rob
     robot = std::move(_robot);
     inputImage = new ImageOf<PixelRgb>;
 
-    cannyThreshold = 20;
+    cannyThreshold = 10;
 
 }
 
@@ -303,14 +303,21 @@ std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getConto
 
     Mat cannyImage, grayImage;
 
-    inputImageMat.convertTo(grayImage, CV_RGB2GRAY);
+    cvtColor(inputImageMat, grayImage, CV_RGB2GRAY);
 
+   
     /// Detect edges using canny
-    Canny( grayImage, cannyImage,     cannyThreshold , cannyThreshold *2, 3 );
+    Canny( grayImage, cannyImage,  cannyThreshold , cannyThreshold *2, 3 );
+
+    
     findContours( cannyImage, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
     /// Draw contours
     Mat drawing = Mat::zeros( cannyImage.size(), CV_8UC3 );
+
+
+
+  
     for( int i = 0; i< contours.size(); i++ )
     {
         Scalar color = Scalar( 255, 255, 255);
@@ -320,8 +327,8 @@ std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getConto
     /// Show in a window
     namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
     imshow( "Contours", drawing );
-
-    return vector<vector<Point>>();
+    waitKey(-1);
+    return contours;
 }
 
 
