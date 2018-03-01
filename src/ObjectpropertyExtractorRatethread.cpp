@@ -39,7 +39,9 @@ using namespace cv;
 ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf) : RateThread(THRATE) {
     robot = "icub";
     inputImage = new ImageOf<PixelRgb>;
-    cannyThreshold = 10;
+    cannyThreshold = rf.check("cannyThreshold",
+                              Value(10),
+                              "canny Threshold parameter ").asInt();
 
 }
 
@@ -48,8 +50,9 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _rob
     robot = std::move(_robot);
     inputImage = new ImageOf<PixelRgb>;
 
-    cannyThreshold = 10;
-
+    cannyThreshold = rf.check("cannyThreshold",
+                              Value(10),
+                              "canny Threshold parameter ").asInt();
 }
 
 ObjectpropertyExtractorRatethread::~ObjectpropertyExtractorRatethread() = default;
@@ -100,15 +103,20 @@ void ObjectpropertyExtractorRatethread::setInputPortName(string InpPort) {
 }
 
 void ObjectpropertyExtractorRatethread::run() {
-    inputImage  = templateImagePort.read();
+
+    if(this->isRunning()){
+        inputImage  = templateImagePort.read();
 
 
-    if(inputImage != nullptr){
+        if(inputImage != nullptr){
 
-        inputImageMat = cvarrToMat(inputImage->getIplImage());
+            inputImageMat = cvarrToMat(inputImage->getIplImage());
 //      cvtColor(inputImageMat, inputImageMat, CV_RGB2BGR);
 
+        }
     }
+
+
     
     
 
@@ -120,13 +128,23 @@ void ObjectpropertyExtractorRatethread::run() {
 void ObjectpropertyExtractorRatethread::threadRelease() {
     yInfo("Releasing thread");
 
-    this->featuresPortOut.interrupt();
-    this->templateImagePort.interrupt();
-
+    this->input2DPosition.close();
+    this->get3DPosition.close();
     this->featuresPortOut.close();
     this->templateImagePort.close();
+
+
 }
 
+void ObjectpropertyExtractorRatethread::interruptThread() {
+
+    yInfo("Inteprupting thread");
+
+    this->input2DPosition.interrupt();
+    this->featuresPortOut.interrupt();
+    this->templateImagePort.interrupt();
+    this->get3DPosition.interrupt();
+}
 
 void ObjectpropertyExtractorRatethread::extractFeatures() {
 
@@ -141,7 +159,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
     const Point2f centerPoint = this->getCenter2DPosition();
     const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
-    const vector<cv::Point>  contour = this->getContours()[0];
+    const vector<cv::Point>  contour = this->getContours(t_inputImage)[0];
 
     cout << "POS 2D " << centerPoint.x << " " << centerPoint.y << endl;
 
@@ -215,7 +233,12 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
 
      //Blue max value
-    if (maxIndex.x == 0) {
+
+    if((red+blue+green) / 3 > 240){
+        return "white";
+    }
+
+    else if (maxIndex.x == 0) {
         if(green > 200 ){
             return "yellow";
         }
@@ -238,10 +261,10 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
     //Red max value
     else if (maxIndex.x == 2){
-        if (red > 140 && blue > 150) {
+        if (red > 140 && blue > 140) {
             return "purple";
         }
-        else if (red > 150 && blue < 150) {
+        else if (red > 140 && blue < 140) {
             return "pink";
         }
         else{
@@ -294,7 +317,7 @@ cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inpu
     return centers;
 }
 
-std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getContours() {
+std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getContours( const Mat inputImage) {
     using namespace cv;
 
 
@@ -330,5 +353,7 @@ std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getConto
     waitKey(-1);
     return contours;
 }
+
+
 
 

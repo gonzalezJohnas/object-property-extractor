@@ -96,13 +96,15 @@ bool ObjectpropertyExtractorModule::close() {
     handlerPort.close();
     /* stop the thread */
     yInfo("stopping the thread \n");
+    rThread->threadRelease();
     rThread->stop();
-    delete rThread;
     return true;
 }
 
 bool ObjectpropertyExtractorModule::interruptModule() {
+    yInfo("Interrupting \n");
     handlerPort.interrupt();
+    rThread->interruptThread();
     return true;
 }
 
@@ -218,5 +220,10 @@ bool ObjectpropertyExtractorModule::updateModule() {
 double ObjectpropertyExtractorModule::getPeriod() {
     /* module periodicity (seconds), called implicitly by myModule */
     return 1.0;
+}
+
+ObjectpropertyExtractorModule::~ObjectpropertyExtractorModule() {
+    delete rThread;
+
 }
 

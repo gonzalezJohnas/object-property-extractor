@@ -105,6 +105,9 @@ public:
     */
     void run() override;
 
+    void interruptThread();
+
+
     /**
     * function that sets the rootname of all the ports that are going to be created by the thread
     * @param str rootnma
@@ -169,7 +172,7 @@ public:
      * Function to detect contours
      * @return vector of point forming the contour
      */
-    std::vector<std::vector<cv::Point> > getContours();
+    std::vector<std::vector<cv::Point> > getContours(Mat inputImage);
 
 
 

@@ -200,6 +200,10 @@ public:
     *  unimplemented
     */
     bool updateModule();
+
+    virtual ~ObjectpropertyExtractorModule();
+
+
 };
 
 
