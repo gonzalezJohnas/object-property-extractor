@@ -39,6 +39,7 @@ using namespace cv;
 ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf) : RateThread(THRATE) {
     robot = "icub";
     inputImage = new ImageOf<PixelRgb>;
+    cannyThreshold = 20;
 
 }
 
@@ -46,6 +47,8 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _rob
         THRATE) {
     robot = std::move(_robot);
     inputImage = new ImageOf<PixelRgb>;
+
+    cannyThreshold = 20;
 
 }
 
@@ -124,6 +127,38 @@ void ObjectpropertyExtractorRatethread::threadRelease() {
     this->templateImagePort.close();
 }
 
+
+void ObjectpropertyExtractorRatethread::extractFeatures() {
+
+    const Mat t_inputImage = this ->getInputImage();
+    Bottle &features = featuresPortOut.prepare();
+    features.clear();
+
+
+    const string color = "( color "+this->getDominantColor(t_inputImage)+" )";
+
+    cout << "Color " <<  color << endl;
+
+    const Point2f centerPoint = this->getCenter2DPosition();
+    const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
+    const vector<cv::Point>  contour = this->getContours()[0];
+
+    cout << "POS 2D " << centerPoint.x << " " << centerPoint.y << endl;
+
+    const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
+    const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
+
+    cout << " 3D position" << pos3D <<  std::endl;
+
+    features.addString(color);
+    features.addString(pos2D);
+    //features.addString(size);
+    features.addString(pos3D);
+
+
+    featuresPortOut.write();
+
+}
 
 
 //*********************************************************************************************************************
@@ -241,44 +276,6 @@ cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
     return cv::Point2f(0, 0);
 }
 
-const int ObjectpropertyExtractorRatethread::getPixelSize(Mat t_src) {
-
-    return (int) round(sqrt(pow(t_src.cols,2) + pow(t_src.rows,2)));
-}
-
-void ObjectpropertyExtractorRatethread::extractFeatures() {
-
-    const Mat t_inputImage = this ->getInputImage();
-    Bottle &features = featuresPortOut.prepare();
-    features.clear();
-
-
-    const string color = "( color "+this->getDominantColor(t_inputImage)+" )";
-
-    cout << "Color " <<  color << endl;
-
-    const Point2f centerPoint = this->getCenter2DPosition();
-    const string pos2D = "(2D-pos "+std::to_string(centerPoint.x)+" "+std::to_string(centerPoint.y)+")";
-    //const string size = "( size "+ to_string(this->getPixelSize(t_inputImage)) +")";
-
-    cout << "POS 2D " << centerPoint.x << " " << centerPoint.y << endl;
-
-    const Point3f worldPoint = this->getCoordinateWorld(centerPoint);
-    const string pos3D = "(3D-pos "+std::to_string(worldPoint.x)+" "+std::to_string(worldPoint.y) +" "+std::to_string(worldPoint.z)+" )";
-
-    cout << " 3D position" << pos3D <<  std::endl;
-    
-
-    features.addString(color);
-    features.addString(pos2D);
-    //features.addString(size);
-    features.addString(pos3D);
-
-
-    featuresPortOut.write();
-
-}
-
 cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {
 
     // Parameters for Kmeans
@@ -295,6 +292,36 @@ cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inpu
     kmeans(samples, numberOfClusters, labels, kmeansCriteria, numberOfAttempts, KMEANS_PP_CENTERS, centers );
 
     return centers;
+}
+
+std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getContours() {
+    using namespace cv;
+
+
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+
+    Mat cannyImage, grayImage;
+
+    inputImageMat.convertTo(grayImage, CV_RGB2GRAY);
+
+    /// Detect edges using canny
+    Canny( grayImage, cannyImage,     cannyThreshold , cannyThreshold *2, 3 );
+    findContours( cannyImage, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
+    /// Draw contours
+    Mat drawing = Mat::zeros( cannyImage.size(), CV_8UC3 );
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        Scalar color = Scalar( 255, 255, 255);
+        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
+    }
+
+    /// Show in a window
+    namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
+    imshow( "Contours", drawing );
+
+    return vector<vector<Point>>();
 }
 
 

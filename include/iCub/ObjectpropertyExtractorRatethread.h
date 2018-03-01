@@ -53,6 +53,7 @@ private:
     std::string name;               // rootname of all the ports opened by this thread
 
 
+    int cannyThreshold;
 
     // Image objects
     yarp::sig::ImageOf<yarp::sig::PixelRgb>* inputImage;
@@ -165,10 +166,10 @@ public:
     cv::Point2f getCenter2DPosition();
 
     /**
-     * Function to get the pixel size  in 2D referencial of input Image
+     * Function to detect contours
+     * @return vector of point forming the contour
      */
-
-    const int getPixelSize(Mat inputImage);
+    std::vector<std::vector<cv::Point> > getContours();
 
 
 
