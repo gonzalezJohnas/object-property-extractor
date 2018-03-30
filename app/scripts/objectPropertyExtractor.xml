@@ -1,0 +1,29 @@
+<application>
+
+    <!-- Modules  -->
+
+    <name>Object_Property_Extractor</name>
+    <module>
+        <name>objectPropertyExtractor</name>
+        <node>icub16</node>
+    </module>
+
+
+
+    <!-- Connections  -->
+    <connection>
+        <from>/objectPropertyExtractor/getPosition3D</from>
+        <to>/SFM/rpc</to>
+    </connection>
+
+    <connection>
+        <from>/zeroDisparityFilterMod/imageTemp:o</from>
+        <to>/objectPropertyExtractor/imageRGB:i</to>
+    </connection>
+
+    <connection>
+        <from>/zeroDisparityFilterMod/geometry:o</from>
+        <to>/objectPropertyExtractor/position2D:i</to>
+    </connection>
+
+</application>
