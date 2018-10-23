@@ -70,7 +70,7 @@ bool ObjectpropertyExtractorModule::configure(yarp::os::ResourceFinder &rf) {
     handlerPortName = "";
     handlerPortName += getName();         // use getName() rather than a literal
 
-    if (!handlerPort.open(handlerPortName.c_str())) {
+    if (!handlerPort.open(handlerPortName)) {
         cout << getName() << ": Unable to open port " << handlerPortName << endl;
         return false;
     }

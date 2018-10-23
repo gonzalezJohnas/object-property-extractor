@@ -26,7 +26,6 @@
 #ifndef _objectpropertyextractor_RATETHREAD_H_
 #define _objectpropertyextractor_RATETHREAD_H_
 
-
 #include <yarp/dev/all.h>
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -36,146 +35,136 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <time.h>
-#include <opencv2/core/core.hpp>
+#include <ctime>
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 
-using  cv::Mat;
 class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
-private:
-    bool result;                    //result of the processing
+ private:
+
+  std::string robot;              // name of the robot
+  std::string name;               // rootname of all the ports opened by this thread
 
 
-    std::string robot;              // name of the robot
-    std::string name;               // rootname of all the ports opened by this thread
+  int cannyThreshold;
 
+  // Image objects
+  yarp::sig::ImageOf<yarp::sig::PixelRgb> *inputImage;
 
-    int cannyThreshold;
+  // Yarp port of the Thread
+  yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
+  yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
+  yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
+  yarp::os::Port anglePositionPort;
 
-    // Image objects
-    yarp::sig::ImageOf<yarp::sig::PixelRgb>* inputImage;
+  // Local variables for processing
+  cv::Mat inputImageMat;
 
+ public:
 
-    // Yarp port of the Thread
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
-    yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
-    yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
-    yarp::os::Port get3DPosition;
+  /**
+  * constructor default
+  */
+  explicit ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
 
-    // Local variables for processing
-    cv::Mat  inputImageMat;
+  /**
+  * constructor
+  * @param robotname name of the robot
+  */
+  ObjectpropertyExtractorRatethread(std::string robotname, yarp::os::ResourceFinder &rf);
 
+  /**
+   * destructor
+   */
+  ~ObjectpropertyExtractorRatethread() override;
 
+  /**
+  *  initialises the thread
+  */
+  bool threadInit() override;
 
+  /**
+  *  correctly releases the thread
+  */
+  void threadRelease() override;
 
-public:
+  /**
+  *  active part of the thread
+  */
+  void run() override;
 
+  void interruptThread();
 
-    /**
-    * constructor default
-    */
-    explicit ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
+  /**
+  * function that sets the rootname of all the ports that are going to be created by the thread
+  * @param str rootnma
+  */
+  void setName(std::string str);
 
-    /**
-    * constructor 
-    * @param robotname name of the robot
-    */
-    ObjectpropertyExtractorRatethread(std::string robotname, yarp::os::ResourceFinder &rf);
+  /**
+  * function that returns the original root name and appends another string iff passed as parameter
+  * @param p pointer to the string that has to be added
+  * @return rootname
+  */
+  std::string getName(const char *p);
 
-    /**
-     * destructor
-     */
-    ~ObjectpropertyExtractorRatethread() override;
+  /**
+  * function that sets the inputPort name
+  */
+  void setInputPortName(std::string inpPrtName);
 
-    /**
-    *  initialises the thread
-    */
-    bool threadInit() override;
-
-    /**
-    *  correctly releases the thread
-    */
-    void threadRelease() override;
-
-    /**
-    *  active part of the thread
-    */
-    void run() override;
-
-    void interruptThread();
-
-
-    /**
-    * function that sets the rootname of all the ports that are going to be created by the thread
-    * @param str rootnma
-    */
-    void setName(std::string str);
-
-    /**
-    * function that returns the original root name and appends another string iff passed as parameter
-    * @param p pointer to the string that has to be added
-    * @return rootname 
-    */
-    std::string getName(const char *p);
-
-    /**
-    * function that sets the inputPort name
-    */
-    void setInputPortName(std::string inpPrtName);
-
-
-    Mat getInputImage(){ return this->inputImageMat;}
+  cv::Mat getInputImage() { return this->inputImageMat; }
 
 
 //************************************************************************************************************************
 // Processing functions
 
-    /**
-     * Function that extract all the features
-     */
+  /**
+   * Function that extract all the features
+   */
 
-    void extractFeatures();
+  void extractFeatures();
 
+  /**
+   * Function that return 3D world coordinate from 2D points
+   */
 
-    /**
-     * Function that return 3D world coordinate from 2D points
-     */
+  cv::Point3d getCoordinateWorld3D(cv::Point2f centerPoint);
 
-    cv::Point3d getCoordinateWorld(cv::Point2f centerPoint);
+  /**
+  * Function that return the  world coordinate express in angles
+  */
 
-    /**
-     * Function to get the name of the Dominant color of the input image
-     */
+  std::vector<double> getCoordinateWorldAngles();
 
-    std::string getDominantColor(Mat inputImage);
+  /**
+   * Function to get the name of the Dominant color of the input image
+   */
 
+  std::string getDominantColor(cv::Mat inputImage);
 
-    /**
-     * Function to get the dominant color susing KMeans algorithm
-     * @param inputImage
-     * @param numberClusters
-     * @return Matrix of the computed culster centers in BGR format
-     */
+  /**
+   * Function to get the dominant color susing KMeans algorithm
+   * @param inputImage
+   * @param numberClusters
+   * @return Matrix of the computed culster centers in BGR format
+   */
 
-    cv::Mat getDominantColorKMeans( Mat inputImage,  int numberClusters);
+  cv::Mat getDominantColorKMeans(cv::Mat inputImage, int numberClusters);
 
-    /**
-     * Function to get the center position in 2D referencial of input Image
-     */
+  /**
+   * Function to get the center position in 2D referencial of input Image
+   */
 
-    cv::Point2f getCenter2DPosition();
+  cv::Point2f getCenter2DPosition();
 
-    /**
-     * Function to detect contours
-     * @return vector of point forming the contour
-     */
-    std::vector<std::vector<cv::Point> > getContours(Mat inputImage);
-
-
-
+  /**
+   * Function to detect contours
+   * @return vector of point forming the contour
+   */
+  std::vector<std::vector<cv::Point> > getContours(cv::Mat inputImage);
 
 };
 
