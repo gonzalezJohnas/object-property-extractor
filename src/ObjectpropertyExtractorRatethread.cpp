@@ -28,7 +28,6 @@
 #include <opencv2/core.hpp>
 
 
-using namespace yarp::dev;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace std;
@@ -87,9 +86,13 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
 
   if (!NetworkBase::connect("/iKinGazeCtrl/angles:o", anglePositionPort.getName())) {
     yInfo("Unable to connect to iKinGazeCtrl/angles:o check that IkInGazeCtrl is running");
-    return false;
 
   }
+
+
+
+
+
 
   return true;
 }
@@ -110,7 +113,8 @@ void ObjectpropertyExtractorRatethread::setInputPortName(string InpPort) {
 
 void ObjectpropertyExtractorRatethread::run() {
 
-    inputImage = templateImagePort.read();
+
+    inputImage = templateImagePort.read(false);
 
     if (inputImage != nullptr) {
 
@@ -214,14 +218,14 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
   Point minIndex, maxIndex;
   minMaxLoc(centers, &min, &max, &minIndex, &maxIndex);
 
-  const int red = colorValue[0];
-  const int green = colorValue[1];
-  const int blue = colorValue[2];
+  const int red = static_cast<const int>(colorValue[0]);
+  const int green = static_cast<const int>(colorValue[1]);
+  const int blue = static_cast<const int>(colorValue[2]);
 
   //cout << red << " " << green << " " << blue << "Max index " << maxIndex.x << endl;
 
 
-  //Blue max value
+  //Red max value
 
   if ((red + blue + green) / 3 > 240) {
     return "white";
@@ -242,7 +246,7 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
   }
 
 
-    //Red max value
+    //Blue max value
   else if (maxIndex.x == 2) {
     if (red > 140 && blue > 140) {
       return "purple";
@@ -254,7 +258,7 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
 
   }
 
-  return "white";
+  return "none";
 
 }
 
@@ -279,6 +283,7 @@ cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
 }
 
 cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {
+
 
   // Parameters for Kmeans
   const int numberOfAttempts = 20;
@@ -345,5 +350,24 @@ vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorldAngles() {
 
 
   return angles;
+}
+
+void ObjectpropertyExtractorRatethread::sendFeatures(iCubObjects t_object) {
+    Bottle &features = featuresPortOut.prepare();
+    features.clear();
+    features = t_object.toBottle();
+
+    this->featuresPortOut.write();
+
+
+}
+
+void ObjectpropertyExtractorRatethread::testOPC() {
+    iCubObjects o = iCubObjects();
+    o.setColorLabel("blue");
+    o.setPosition(std::vector<double>{1,2,3});
+
+    this->sendFeatures(o);
+
 }
 

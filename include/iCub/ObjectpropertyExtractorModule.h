@@ -138,23 +138,26 @@
 #include <opencv2/opencv.hpp>
 
 
-// general command vocab's
-#define COMMAND_VOCAB_OK                 VOCAB2('o','k')
+class ObjectpropertyExtractorModule : public yarp::os::RFModule {
 
-#define COMMAND_VOCAB_SET                VOCAB3('s','e','t')
-#define COMMAND_VOCAB_GET                VOCAB3('g','e','t')
-#define COMMAND_VOCAB_SUSPEND            VOCAB3('s','u','s')
-#define COMMAND_VOCAB_RES                VOCAB3('r','e','s')
-#define COMMAND_VOCAB_COLOR              VOCAB3('c','o','l')
+    enum{
+        // general command vocab's
+         COMMAND_VOCAB_OK = yarp::os::createVocab('o', 'k'),
 
-
-#define COMMAND_VOCAB_HELP               VOCAB4('h','e','l','p')
-#define COMMAND_VOCAB_FAILED             VOCAB4('f','a','i','l')
-#define COMMAND_VOCAB_FEATURES           VOCAB4('f','e','a','t')
+         COMMAND_VOCAB_SET = yarp::os::createVocab('s', 'e', 't'),
+         COMMAND_VOCAB_GET = yarp::os::createVocab('g', 'e', 't'),
+         COMMAND_VOCAB_SUSPEND = yarp::os::createVocab('s', 'u', 's'),
+         COMMAND_VOCAB_RES = yarp::os::createVocab('r', 'e', 's'),
+         COMMAND_VOCAB_COLOR = yarp::os::createVocab('c', 'o', 'l'),
 
 
-class ObjectpropertyExtractorModule:public yarp::os::RFModule {
+         COMMAND_VOCAB_HELP = yarp::os::createVocab('h', 'e', 'l', 'p'),
+         COMMAND_VOCAB_FAILED = yarp::os::createVocab('f', 'a', 'i', 'l'),
+         COMMAND_VOCAB_FEATURES = yarp::os::createVocab('f', 'e', 'a', 't'),
+         COMMAND_VOCAB_TEST = yarp::os::createVocab('t', 'e', 's', 't')
 
+
+    };
 
     std::string moduleName;                  // name of the module
     std::string robotName;                   // name of the robot
@@ -173,6 +176,7 @@ public:
     * @return flag for the success
     */
     bool configure(yarp::os::ResourceFinder &rf);
+
     /**
     *  interrupt, e.g., the ports
     */
@@ -189,7 +193,7 @@ public:
     * @param reply reference to bottle returned by the rpc port in response to command
     * @return bool flag for the success of response else termination of module
     */
-    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
+    bool respond(const yarp::os::Bottle &command, yarp::os::Bottle &reply);
 
     /**
     *  implemented to define the periodicity of the module

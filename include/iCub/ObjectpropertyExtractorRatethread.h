@@ -26,12 +26,17 @@
 #ifndef _objectpropertyextractor_RATETHREAD_H_
 #define _objectpropertyextractor_RATETHREAD_H_
 
-#include <yarp/dev/all.h>
-#include <yarp/os/all.h>
-#include <yarp/sig/all.h>
-#include <yarp/os/RateThread.h>
+
+#include <yarp/conf/system.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/Vocab.h>
+#include <yarp/os/ResourceFinder.h>
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/RpcClient.h>
+#include <yarp/os/Portable.h>
+#include <yarp/sig/Image.h>
+
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -39,29 +44,13 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <yarp/os/RateThread.h>
+
+#include "iCubObjects.h"
+
 
 
 class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
- private:
-
-  std::string robot;              // name of the robot
-  std::string name;               // rootname of all the ports opened by this thread
-
-
-  int cannyThreshold;
-
-  // Image objects
-  yarp::sig::ImageOf<yarp::sig::PixelRgb> *inputImage;
-
-  // Yarp port of the Thread
-  yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
-  yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
-  yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
-  yarp::os::Port anglePositionPort;
-
-  // Local variables for processing
-  cv::Mat inputImageMat;
-
  public:
 
   /**
@@ -117,10 +106,10 @@ class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
 
   cv::Mat getInputImage() { return this->inputImageMat; }
 
-
 //************************************************************************************************************************
-// Processing functions
 
+
+// Processing functions
   /**
    * Function that extract all the features
    */
@@ -165,6 +154,38 @@ class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
    * @return vector of point forming the contour
    */
   std::vector<std::vector<cv::Point> > getContours(cv::Mat inputImage);
+
+
+  void testOPC();
+
+private:
+
+    const yarp::conf::vocab32_t VOCAB_ADD = yarp::os::createVocab('a', 'd', 'd');
+    const yarp::conf::vocab32_t VOCAB_ACK = yarp::os::createVocab('a', 'c', 'k');
+
+
+    std::string robot;              // name of the robot
+    std::string name;               // rootname of all the ports opened by this thread
+
+
+    int cannyThreshold;
+
+    // Image objects
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> *inputImage;
+
+    // Yarp port of the Thread
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
+    yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
+    yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
+    yarp::os::Port anglePositionPort;
+    // Local variables for processing
+    cv::Mat inputImageMat;
+
+
+
+
+    void sendFeatures(iCubObjects t_object);
+
 
 };
 

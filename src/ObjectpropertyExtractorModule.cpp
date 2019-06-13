@@ -85,7 +85,6 @@ bool ObjectpropertyExtractorModule::configure(yarp::os::ResourceFinder &rf) {
     /*pass the name of the module in order to create ports*/
     rThread->setName(moduleName);
     rThread->start();
-    rThread->run();
 
 
     return true;       // let the RFModule know everything went well
@@ -187,6 +186,14 @@ bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply
             rec = true;
             {
                 rThread->suspend();
+                ok = true;
+            }
+            break;
+
+        case COMMAND_VOCAB_TEST:
+            rec = true;
+            {
+                rThread->testOPC();
                 ok = true;
             }
             break;
