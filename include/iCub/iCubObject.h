@@ -10,27 +10,33 @@
 #include <string>
 #include <yarp/os/Bottle.h>
 
-class iCubObjects {
+class iCubObject {
 
 public:
-    iCubObjects iCubOjects();
+    iCubObject iCubOjects();
 
-private:
-    std::vector<double> m_position;
+
+
+
 public:
     const std::vector<double> &getMPosition() const;
 
-    void setPosition(const std::vector<double> &mPosition);
+    void setAnglePosition(const std::vector<double> &mPosition);
 
     const std::string &getColorLabel() const;
 
-    void setColorLabel(const std::string &mColorLbale);
+    void setColorLabel(const std::string &mColorLabel);
+
+    const std::vector<double> &getM_cartesianPosition() const;
+
+    void setCartesianPosition(const std::vector<double> &m_cartesianPosition);
 
     yarp::os::Bottle toBottle();
 
 private:
     std::string m_colorLabel;
-
+    std::vector<double> m_anglePosition;
+    std::vector<double> m_cartesianPosition;
 
 };
 

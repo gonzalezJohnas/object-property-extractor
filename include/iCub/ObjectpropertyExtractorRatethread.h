@@ -46,7 +46,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <yarp/os/RateThread.h>
 
-#include "iCubObjects.h"
+#include "iCubObject.h"
 
 
 
@@ -116,17 +116,9 @@ class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
 
   void extractFeatures();
 
-  /**
-   * Function that return 3D world coordinate from 2D points
-   */
 
-  cv::Point3d getCoordinateWorld3D(cv::Point2f centerPoint);
 
-  /**
-  * Function that return the  world coordinate express in angles
-  */
 
-  std::vector<double> getCoordinateWorldAngles();
 
   /**
    * Function to get the name of the Dominant color of the input image
@@ -178,13 +170,26 @@ private:
     yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
     yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
     yarp::os::Port anglePositionPort;
+    yarp::os::Port cartesianPositionPort;
     // Local variables for processing
     cv::Mat inputImageMat;
 
 
 
 
-    void sendFeatures(iCubObjects t_object);
+    void sendFeatures(iCubObject t_object);
+
+    /**
+    * Function that return 3D world coordinate from 2D points
+    */
+
+    std::vector<double> getCoordinateWorld3D();
+
+    /**
+    * Function that return the  world coordinate express in angles
+    */
+
+    std::vector<double> getCoordinateWorldAngles();
 
 
 };
