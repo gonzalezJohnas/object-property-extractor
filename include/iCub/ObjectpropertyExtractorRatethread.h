@@ -45,116 +45,94 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <yarp/os/RateThread.h>
+#include <opencv2/core/types_c.h>
 
 #include "iCubObject.h"
 
+const static cv::Mat whiteColor(1, 3, CV_8UC3, cvScalar(255, 255, 255));
+const static cv::Mat blackColor(1, 3, CV_8UC3, cvScalar(0, 0, 0));
+
+const static std::map<unsigned int, std::string> colorMap = {
+        {20, "red"   },
+        {75, "yellow"},
+        {138, "green"},
+        {250, "blue"},
+        {360, "red"},
+
+};
 
 
 class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
- public:
+public:
 
-  /**
-  * constructor default
-  */
-  explicit ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
+    /**
+    * constructor default
+    */
+    explicit ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf);
 
-  /**
-  * constructor
-  * @param robotname name of the robot
-  */
-  ObjectpropertyExtractorRatethread(std::string robotname, yarp::os::ResourceFinder &rf);
+    /**
+    * constructor
+    * @param robotname name of the robot
+    */
+    ObjectpropertyExtractorRatethread(std::string robotname, yarp::os::ResourceFinder &rf);
 
-  /**
-   * destructor
-   */
-  ~ObjectpropertyExtractorRatethread() override;
+    /**
+     * destructor
+     */
+    ~ObjectpropertyExtractorRatethread() override;
 
-  /**
-  *  initialises the thread
-  */
-  bool threadInit() override;
+    /**
+    *  initialises the thread
+    */
+    bool threadInit() override;
 
-  /**
-  *  correctly releases the thread
-  */
-  void threadRelease() override;
+    /**
+    *  correctly releases the thread
+    */
+    void threadRelease() override;
 
-  /**
-  *  active part of the thread
-  */
-  void run() override;
+    /**
+    *  active part of the thread
+    */
+    void run() override;
 
-  void interruptThread();
+    void interruptThread();
 
-  /**
-  * function that sets the rootname of all the ports that are going to be created by the thread
-  * @param str rootnma
-  */
-  void setName(std::string str);
+    /**
+    * function that sets the rootname of all the ports that are going to be created by the thread
+    * @param str rootnma
+    */
+    void setName(std::string str);
 
-  /**
-  * function that returns the original root name and appends another string iff passed as parameter
-  * @param p pointer to the string that has to be added
-  * @return rootname
-  */
-  std::string getName(const char *p);
+    /**
+    * function that returns the original root name and appends another string iff passed as parameter
+    * @param p pointer to the string that has to be added
+    * @return rootname
+    */
+    std::string getName(const char *p);
 
-  /**
-  * function that sets the inputPort name
-  */
-  void setInputPortName(std::string inpPrtName);
+    /**
+    * function that sets the inputPort name
+    */
+    void setInputPortName(std::string inpPrtName);
 
-  cv::Mat getInputImage() { return this->inputImageMat; }
+    cv::Mat getInputImage() { return this->inputImageMat; }
 
 //************************************************************************************************************************
 
 
-// Processing functions
-  /**
-   * Function that extract all the features
-   */
+    /**
+     * Function that extract all the features
+     */
 
-  void extractFeatures();
-
+    void extractFeatures();
 
 
+    void testOPC();
 
-
-  /**
-   * Function to get the name of the Dominant color of the input image
-   */
-
-  std::string getDominantColor(cv::Mat inputImage);
-
-  /**
-   * Function to get the dominant color susing KMeans algorithm
-   * @param inputImage
-   * @param numberClusters
-   * @return Matrix of the computed culster centers in BGR format
-   */
-
-  cv::Mat getDominantColorKMeans(cv::Mat inputImage, int numberClusters);
-
-  /**
-   * Function to get the center position in 2D referencial of input Image
-   */
-
-  cv::Point2f getCenter2DPosition();
-
-  /**
-   * Function to detect contours
-   * @return vector of point forming the contour
-   */
-  std::vector<std::vector<cv::Point> > getContours(cv::Mat inputImage);
-
-
-  void testOPC();
+    std::string testColor(cv::Mat img);
 
 private:
-
-    const yarp::conf::vocab32_t VOCAB_ADD = yarp::os::createVocab('a', 'd', 'd');
-    const yarp::conf::vocab32_t VOCAB_ACK = yarp::os::createVocab('a', 'c', 'k');
-
 
     std::string robot;              // name of the robot
     std::string name;               // rootname of all the ports opened by this thread
@@ -169,12 +147,10 @@ private:
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > templateImagePort;
     yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
     yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
-    yarp::os::Port anglePositionPort;
-    yarp::os::Port cartesianPositionPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> anglePositionPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> cartesianPositionPort;
     // Local variables for processing
     cv::Mat inputImageMat;
-
-
 
 
     void sendFeatures(iCubObject t_object);
@@ -190,6 +166,37 @@ private:
     */
 
     std::vector<double> getCoordinateWorldAngles();
+
+
+    /**
+     * Function to get the name of the Dominant color of the input image
+     */
+
+    std::string getDominantColor(cv::Mat inputImage);
+
+    /**
+     * Function to get the dominant color susing KMeans algorithm
+     * @param inputImage
+     * @param numberClusters
+     * @return Matrix of the computed culster centers in BGR format
+     */
+
+    cv::Mat getDominantColorKMeans(cv::Mat inputImage, int numberClusters);
+
+    /**
+     * Function to get the center position in 2D referencial of input Image
+     */
+
+    cv::Point2f getCenter2DPosition();
+
+    /**
+     * Function to detect contours
+     * @return vector of point forming the contour
+     */
+    std::vector<std::vector<cv::Point> > getContours(cv::Mat inputImage);
+
+
+
 
 
 };

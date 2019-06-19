@@ -4,7 +4,7 @@
 
 using namespace yarp::os;
 using namespace yarp::sig;
-
+using namespace cv;
 
 int main(int argc, char *argv[]) {
 
@@ -21,6 +21,8 @@ int main(int argc, char *argv[]) {
     yInfo("resourceFinder: %s", rf.toString().c_str());
 
     module.runModule(rf);
+
+
 
     return 0;
 }

@@ -35,6 +35,9 @@ using namespace cv;
 
 #define THRATE 100 //ms
 
+
+
+
 //********************interactionEngineRatethread******************************************************
 
 ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::ResourceFinder &rf)
@@ -186,13 +189,12 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
 std::vector<double>ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
 
-    Bottle position3DBottle;
-    cartesianPositionPort.read(position3DBottle);
+    Bottle *position3DBottle = cartesianPositionPort.read();
 
     std::vector<double> cartesianPosition;
-    cartesianPosition.push_back(position3DBottle.get(0).asDouble());
-    cartesianPosition.push_back(position3DBottle.get(1).asDouble());
-    cartesianPosition.push_back(position3DBottle.get(2).asDouble());
+    cartesianPosition.push_back(position3DBottle->get(0).asDouble());
+    cartesianPosition.push_back(position3DBottle->get(1).asDouble());
+    cartesianPosition.push_back(position3DBottle->get(2).asDouble());
 
     return cartesianPosition;
 
@@ -200,61 +202,38 @@ std::vector<double>ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
 
 std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
-    Mat centers = getDominantColorKMeans(t_src, 2);
-    auto colorValue = centers.ptr<float>(0);
-
-    if (((int) colorValue[0]) == 0 || ((int) colorValue[1]) == 0 || ((int) colorValue[2]) == 0) {
-        cout << "Change centers " << colorValue[0] << " " << colorValue[1] << " " << colorValue[2] << endl;
-        colorValue = centers.ptr<float>(1);
-    }
-
-    double max, min;
-    Point minIndex, maxIndex;
-    minMaxLoc(centers, &min, &max, &minIndex, &maxIndex);
-
-    const int red = static_cast<const int>(colorValue[0]);
-    const int green = static_cast<const int>(colorValue[1]);
-    const int blue = static_cast<const int>(colorValue[2]);
-
-    //cout << red << " " << green << " " << blue << "Max index " << maxIndex.x << endl;
+    const Mat centers = getDominantColorKMeans(t_src, 3);
 
 
-    //Red max value
 
-    if ((red + blue + green) / 3 > 240) {
-        return "white";
-    } else if (maxIndex.x == 0) {
-        if (green > 200) {
-            return "yellow";
-        } else if (green > 90) {
-            return "orange";
-        } else {
-            return "red";
+
+    for(int i = 0; i < centers.rows ; i++){
+        auto colorValue = centers.ptr<float>(i);
+
+        const Mat color(1,3, CV_8UC3, cvScalar(colorValue[0] ,colorValue[1],colorValue[2]));
+        const double dist_white = norm(whiteColor, color, NORM_L2);
+        const double dist_black = norm(blackColor, color, NORM_L2);
+
+        if(dist_white > 50 && dist_black > 50){
+            Mat hsv_value;
+            cvtColor(color, hsv_value, COLOR_BGR2HSV_FULL);
+            const int hue_value = hsv_value.at<Vec3b>(0, 0).val[0];
+
+            for (const auto &it : colorMap) {
+                if(hue_value < it.first){
+                    string t =  it.second;
+                    return  t;
+                }
+            }
+
         }
-
     }
 
-        //Green max value
-    else if (maxIndex.x == 1) {
-        return "green";
-    }
-
-
-        //Blue max value
-    else if (maxIndex.x == 2) {
-        if (red > 140 && blue > 140) {
-            return "purple";
-        } else if (red > 140 && blue < 140) {
-            return "pink";
-        } else {
-            return "blue";
-        }
-
-    }
-
-    return "none";
+    return "unknown";
 
 }
+
+
 
 cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
 
@@ -277,7 +256,6 @@ cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
 }
 
 cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {
-
 
     // Parameters for Kmeans
     const int numberOfAttempts = 20;
@@ -333,12 +311,11 @@ vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorldAngles() {
     vector<double> angles;
 
     if (anglePositionPort.getInputCount()) {
-        Bottle anglesBottle;
-        anglePositionPort.read(anglesBottle);
+        Bottle *anglesBottle = anglePositionPort.read();
 
-        angles.push_back(anglesBottle.get(0).asDouble());
-        angles.push_back(anglesBottle.get(1).asDouble());
-        angles.push_back(anglesBottle.get(2).asDouble());
+        angles.push_back(anglesBottle->get(0).asDouble());
+        angles.push_back(anglesBottle->get(1).asDouble());
+        angles.push_back(anglesBottle->get(2).asDouble());
 
     }
 
@@ -364,5 +341,9 @@ void ObjectpropertyExtractorRatethread::testOPC() {
 
     this->sendFeatures(o);
 
+}
+
+std::string ObjectpropertyExtractorRatethread::testColor(cv::Mat img) {
+    return this->getDominantColor(std::move(img));
 }
 
