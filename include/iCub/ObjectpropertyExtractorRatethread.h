@@ -37,6 +37,7 @@
 #include <yarp/os/Portable.h>
 #include <yarp/sig/Image.h>
 
+#include <utility>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -49,15 +50,23 @@
 
 #include "iCubObject.h"
 
+
+
 const static cv::Mat whiteColor(1, 3, CV_8UC3, cvScalar(255, 255, 255));
 const static cv::Mat blackColor(1, 3, CV_8UC3, cvScalar(0, 0, 0));
 
-const static std::map<unsigned int, std::string> colorMap = {
-        {20, "red"   },
-        {75, "yellow"},
-        {138, "green"},
-        {250, "blue"},
-        {360, "red"},
+
+const static Color red("red", 255, 0,  0);
+const static Color yellow("red", 255, 0,  0);
+const static Color blue("red", 255, 0,  0);
+const static Color green("red", 255, 0,  0);
+
+const static std::map<unsigned int, Color> colorMap = {
+        {20,  red },
+        {75, yellow},
+        {138, green},
+        {250, blue},
+        {360, red},
 
 };
 
@@ -174,7 +183,7 @@ private:
      * Function to get the name of the Dominant color of the input image
      */
 
-    std::string getDominantColor(cv::Mat inputImage);
+    Color getDominantColor(cv::Mat inputImage);
 
     /**
      * Function to get the dominant color susing KMeans algorithm

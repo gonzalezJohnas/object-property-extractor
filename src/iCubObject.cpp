@@ -12,20 +12,18 @@ void iCubObject::setAnglePosition(const std::vector<double> &mPosition) {
     m_anglePosition = mPosition;
 }
 
-const std::string &iCubObject::getColorLabel() const {
-    return m_colorLabel;
-}
 
-void iCubObject::setColorLabel(const std::string &mColorLabel) {
-    m_colorLabel = mColorLabel;
-}
+
 
 yarp::os::Bottle iCubObject::toBottle() {
 
 
     yarp::os::Bottle colorBottle;
     colorBottle.addString("color");
-    colorBottle.addString(this->m_colorLabel);
+    colorBottle.addString(this->m_color.name);
+    colorBottle.addInt(this->m_color.red);
+    colorBottle.addInt(this->m_color.green);
+    colorBottle.addInt(this->m_color.blue);
 
 
     yarp::os::Bottle anglePositionBottle;
@@ -60,6 +58,14 @@ const std::vector<double> &iCubObject::getM_cartesianPosition() const {
 
 void iCubObject::setCartesianPosition(const std::vector<double> &m_cartesianPosition) {
     iCubObject::m_cartesianPosition = m_cartesianPosition;
+}
+
+const Color &iCubObject::getM_color() const {
+    return m_color;
+}
+
+void iCubObject::set_color(const Color &m_color) {
+    iCubObject::m_color = m_color;
 }
 
 

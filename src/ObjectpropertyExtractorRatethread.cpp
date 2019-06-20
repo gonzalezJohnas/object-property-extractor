@@ -164,15 +164,15 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
-    const string color = this->getDominantColor(t_inputImage);
+    const Color color = this->getDominantColor(t_inputImage);
 
 
-    const vector<cv::Point> contour = this->getContours(t_inputImage);
+    const std::string contour_name = this->getContours(t_inputImage);
     const vector<double> anglesPosition = this->getCoordinateWorldAngles();
     const vector<double> cartesianPosition = this->getCoordinateWorld3D();
 
 
-    receivedObject.setColorLabel(color);
+    receivedObject.set_color(color);
     receivedObject.setAnglePosition(anglesPosition);
     receivedObject.setCartesianPosition(cartesianPosition);
 
@@ -200,7 +200,7 @@ std::vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
 
 }
 
-std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
+Color ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
     const Mat center = getDominantColorKMeans(t_src, 3);
 
@@ -218,18 +218,19 @@ std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src)
     const int value = hsv_value.at<Vec3b>(0, 0).val[2];
 
     if (sat < 30 && value > 160) {
-        return "white";
+        Color white("white", 255, 255,  255);
+        return white;
     }
 
     for (const auto &it : colorMap) {
         if (hue < it.first) {
-            string t = it.second;
-            return t;
+            return it.second;
+
         }
     }
 
-
-    return "unknown";
+    Color default_color("unknown", 0,0,0);
+    return default_color;
 
 }
 
@@ -364,7 +365,7 @@ void ObjectpropertyExtractorRatethread::sendFeatures(iCubObject t_object) {
 
 void ObjectpropertyExtractorRatethread::testOPC() {
     iCubObject o = iCubObject();
-    o.setColorLabel("blue");
+    o.set_color(blue);
     o.setAnglePosition(std::vector<double>{1, 2, 3});
     o.setCartesianPosition(std::vector<double>{1, 2, 3});
 
@@ -374,6 +375,6 @@ void ObjectpropertyExtractorRatethread::testOPC() {
 
 std::string ObjectpropertyExtractorRatethread::testColor(cv::Mat img) {
     getContours(img);
-    return this->getDominantColor(std::move(img));
+    return this->getDominantColor(std::move(img)).name;
 }
 

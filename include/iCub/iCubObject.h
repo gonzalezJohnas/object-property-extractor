@@ -10,6 +10,14 @@
 #include <string>
 #include <yarp/os/Bottle.h>
 
+struct  Color{
+    Color() : name(), red(), green(), blue() {}
+    Color(std::string newName, int r, int g, int b)
+            : name(std::move(newName)), red(r), green(g), blue(b) {}
+    std::string name;
+    int red, green, blue;
+};
+
 class iCubObject {
 
 public:
@@ -23,9 +31,7 @@ public:
 
     void setAnglePosition(const std::vector<double> &mPosition);
 
-    const std::string &getColorLabel() const;
 
-    void setColorLabel(const std::string &mColorLabel);
 
     const std::vector<double> &getM_cartesianPosition() const;
 
@@ -33,8 +39,12 @@ public:
 
     yarp::os::Bottle toBottle();
 
+    const Color &getM_color() const;
+    void set_color(const Color &m_color);
+
 private:
-    std::string m_colorLabel;
+
+    Color m_color;
     std::vector<double> m_anglePosition;
     std::vector<double> m_cartesianPosition;
 
