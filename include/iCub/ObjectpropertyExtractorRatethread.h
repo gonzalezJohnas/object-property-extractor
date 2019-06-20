@@ -62,6 +62,8 @@ const static std::map<unsigned int, std::string> colorMap = {
 };
 
 
+
+
 class ObjectpropertyExtractorRatethread : public yarp::os::RateThread {
 public:
 
@@ -193,7 +195,7 @@ private:
      * Function to detect contours
      * @return vector of point forming the contour
      */
-    std::vector<std::vector<cv::Point> > getContours(cv::Mat inputImage);
+    std::string getContours(cv::Mat inputImage);
 
 
 

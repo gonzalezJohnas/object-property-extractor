@@ -45,7 +45,7 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::R
     robot = "icub";
     inputImage = new ImageOf<PixelRgb>;
     cannyThreshold = rf.check("cannyThreshold",
-                              Value(10),
+                              Value(80),
                               "canny Threshold parameter ").asInt();
 
 }
@@ -57,7 +57,7 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(string _rob
     inputImage = new ImageOf<PixelRgb>;
 
     cannyThreshold = rf.check("cannyThreshold",
-                              Value(10),
+                              Value(80),
                               "canny Threshold parameter ").asInt();
 }
 
@@ -160,14 +160,14 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
 
     iCubObject receivedObject;
-    const Mat t_inputImage = this->getInputImage();
+    const Mat t_inputImage = inputImageMat;
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
     const string color = this->getDominantColor(t_inputImage);
 
 
-    const vector<cv::Point> contour = this->getContours(t_inputImage)[0];
+    const vector<cv::Point> contour = this->getContours(t_inputImage);
     const vector<double> anglesPosition = this->getCoordinateWorldAngles();
     const vector<double> cartesianPosition = this->getCoordinateWorld3D();
 
@@ -187,7 +187,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
 //********************************************* Core functions *********************************************************
 
-std::vector<double>ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
+std::vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
 
     Bottle *position3DBottle = cartesianPositionPort.read();
 
@@ -202,37 +202,36 @@ std::vector<double>ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
 
 std::string ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 
-    const Mat centers = getDominantColorKMeans(t_src, 3);
+    const Mat center = getDominantColorKMeans(t_src, 3);
 
 
+    auto colorValue = center.ptr<float>();
+
+    const Mat color(1, 3, CV_8UC3, cvScalar(colorValue[0], colorValue[1], colorValue[2]));
+    const double dist_black = norm(blackColor, color, NORM_L2);
 
 
-    for(int i = 0; i < centers.rows ; i++){
-        auto colorValue = centers.ptr<float>(i);
+    Mat hsv_value;
+    cvtColor(color, hsv_value, COLOR_BGR2HSV_FULL);
+    const int hue = hsv_value.at<Vec3b>(0, 0).val[0];
+    const int sat = hsv_value.at<Vec3b>(0, 0).val[1];
+    const int value = hsv_value.at<Vec3b>(0, 0).val[2];
 
-        const Mat color(1,3, CV_8UC3, cvScalar(colorValue[0] ,colorValue[1],colorValue[2]));
-        const double dist_white = norm(whiteColor, color, NORM_L2);
-        const double dist_black = norm(blackColor, color, NORM_L2);
+    if (sat < 30 && value > 160) {
+        return "white";
+    }
 
-        if(dist_white > 50 && dist_black > 50){
-            Mat hsv_value;
-            cvtColor(color, hsv_value, COLOR_BGR2HSV_FULL);
-            const int hue_value = hsv_value.at<Vec3b>(0, 0).val[0];
-
-            for (const auto &it : colorMap) {
-                if(hue_value < it.first){
-                    string t =  it.second;
-                    return  t;
-                }
-            }
-
+    for (const auto &it : colorMap) {
+        if (hue < it.first) {
+            string t = it.second;
+            return t;
         }
     }
+
 
     return "unknown";
 
 }
-
 
 
 cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
@@ -270,39 +269,69 @@ cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inpu
 
     kmeans(samples, numberOfClusters, labels, kmeansCriteria, numberOfAttempts, KMEANS_PP_CENTERS, centers);
 
-    return centers;
+    int max_label = -1;
+    for (int i = 0; i < numberOfClusters; ++i) {
+
+
+        auto colorValue = centers.ptr<float>(i);
+
+        const Mat color(1, 3, CV_8UC3, cvScalar(colorValue[0], colorValue[1], colorValue[2]));
+        const double dist_black = norm(blackColor, color, NORM_L2);
+
+        if (dist_black > 50) {
+
+            const long nb_occurence = count(labels.begin<int>(), labels.end<int>(), i);
+            if (nb_occurence > max_label) {
+                max_label = i;
+            }
+        }
+    }
+
+
+    return centers.row(max_label);
 }
 
-std::vector<std::vector<cv::Point> > ObjectpropertyExtractorRatethread::getContours(const Mat inputImage) {
-    using namespace cv;
+std::string ObjectpropertyExtractorRatethread::getContours(const Mat inputImage) {
 
 
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
 
-    Mat cannyImage, grayImage;
+    Mat cannyImage, grayImage, approximated_poly;
 
-    cvtColor(inputImageMat, grayImage, CV_RGB2GRAY);
+    cvtColor(inputImage, grayImage, CV_BGR2GRAY);
 
 
     /// Detect edges using canny
     Canny(grayImage, cannyImage, cannyThreshold, cannyThreshold * 2, 3);
+
 
     findContours(cannyImage, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
     /// Draw contours
     Mat drawing = Mat::zeros(cannyImage.size(), CV_8UC3);
 
-    for (int i = 0; i < contours.size(); i++) {
+
+    for (int i = 0; i < contours.size(); ++i) {
+
         Scalar color = Scalar(255, 255, 255);
         drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+        approxPolyDP(contours[i], approximated_poly, arcLength(Mat(contours[i]), true) * 0.05, true);
+
+
+        if (approximated_poly.rows == 3) {
+            return "triangle";
+        } else if (approximated_poly.rows == 4 &&
+                   boundingRect(approximated_poly).width == boundingRect(approximated_poly).height) {
+            return "square";
+        } else {
+          return "circle ";
+
+        }
     }
 
-    /// Show in a window
-//  namedWindow("Contours", CV_WINDOW_AUTOSIZE);
-//  imshow("Contours", drawing);
-//  waitKey(-1);
-    return contours;
+
+    return "unknown";
 }
 
 
@@ -344,6 +373,7 @@ void ObjectpropertyExtractorRatethread::testOPC() {
 }
 
 std::string ObjectpropertyExtractorRatethread::testColor(cv::Mat img) {
+    getContours(img);
     return this->getDominantColor(std::move(img));
 }
 
