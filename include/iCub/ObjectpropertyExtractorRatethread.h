@@ -57,9 +57,9 @@ const static cv::Mat blackColor(1, 3, CV_8UC3, cvScalar(0, 0, 0));
 
 
 const static Color red("red", 255, 0,  0);
-const static Color yellow("red", 255, 0,  0);
-const static Color blue("red", 255, 0,  0);
-const static Color green("red", 255, 0,  0);
+const static Color yellow("yellow", 255, 255,  0);
+const static Color blue("blue", 0, 0,  255);
+const static Color green("green", 0, 255,  0);
 
 const static std::map<unsigned int, Color> colorMap = {
         {20,  red },
