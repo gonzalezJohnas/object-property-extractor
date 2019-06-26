@@ -164,6 +164,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
+    const cv::Point2i centerOfMass = getCenterOfMass(t_inputImage);
     const Color color = this->getDominantColor(t_inputImage);
 
 
@@ -175,7 +176,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
     receivedObject.set_color(color);
     receivedObject.setAnglePosition(anglesPosition);
     receivedObject.setCartesianPosition(cartesianPosition);
-
+    receivedObject.setM_centerOfMass2D()
 
     features = receivedObject.toBottle();
 
@@ -235,24 +236,35 @@ Color ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 }
 
 
-cv::Point2f ObjectpropertyExtractorRatethread::getCenter2DPosition() {
+cv::Point2i ObjectpropertyExtractorRatethread::getCenterOfMass(const Mat inputImage) {
 
-    Bottle *inputBottle2DPosition = input2DPosition.read();
-    if (inputBottle2DPosition != nullptr) {
-        const int xPositionTopLeft = inputBottle2DPosition->get(0).asInt();
-        const int yPositionTopLeft = inputBottle2DPosition->get(1).asInt();
+    Mat gray_image;
+    cvtColor(inputImage, gray_image, COLOR_RGB2GRAY);
+    cv::Point2i left(-1 ,-1), bottom(-1,-1);
 
-        const int xPositionBottomRight = inputBottle2DPosition->get(2).asInt();
-        const int yPositionBottomRight = inputBottle2DPosition->get(3).asInt();
+    for(int i = 0; i < inputImage.rows; ++i){
+        const int reverse_index_i =  inputImage.rows - i -1;
 
-        const int width = xPositionBottomRight - xPositionTopLeft;
-        const int height = yPositionBottomRight - yPositionTopLeft;
+        for(int j = 0 ; j < inputImage.cols; ++j){
+            if ((int)gray_image.at<unsigned char>(i,j) > 0 && left.x == -1){
+                left.y = i;
+                left.x =j;
+            }
 
-        return cv::Point2f(xPositionTopLeft + (width / 2), yPositionTopLeft + (height / 2));
-
+            const int reverse_index_j = inputImage.cols - j -1;
+            if((int)gray_image.at<unsigned char>(reverse_index_i, reverse_index_j) > 0 && bottom.x == -1){
+                bottom.y = reverse_index_i;
+                bottom.x = reverse_index_j;
+            }
+        }
     }
 
-    return cv::Point2f(0, 0);
+
+    const int center_x = left.x + (bottom.x - left.x ) / 2;
+    const int center_y = left.y + (bottom.y - left.y) / 2;
+    return cv::Point2i(center_x, center_y);
+
+
 }
 
 cv::Mat ObjectpropertyExtractorRatethread::getDominantColorKMeans(const Mat inputImage, const int numberOfClusters) {

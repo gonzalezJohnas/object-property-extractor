@@ -18,6 +18,13 @@ struct  Color{
     int red, green, blue;
 };
 
+struct  Point2d{
+    Point2d() : x(), y() {}
+    Point2d( int t_x, int t_y)
+            : x(t_x), y(t_y) {}
+    int x, y;
+};
+
 class iCubObject {
 
 public:
@@ -42,11 +49,17 @@ public:
     const Color &getM_color() const;
     void set_color(const Color &m_color);
 
+    const Point2d &getM_centerOfMass2D() const;
+
+    void setM_centerOfMass2D(const Point2d &m_centerOfMass2D);
+
 private:
 
     Color m_color;
     std::vector<double> m_anglePosition;
     std::vector<double> m_cartesianPosition;
+    Point2d m_centerOfMass2D;
+
 
 };
 

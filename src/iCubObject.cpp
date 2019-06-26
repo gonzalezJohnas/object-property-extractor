@@ -39,11 +39,17 @@ yarp::os::Bottle iCubObject::toBottle() {
     cartesianPositionBottle.addDouble(this->m_cartesianPosition.at(1));
     cartesianPositionBottle.addDouble(this->m_cartesianPosition.at(2));
 
+    yarp::os::Bottle centerOfMassBottle;
+    centerOfMassBottle.addString("center_mass");
+    centerOfMassBottle.addInt(this->m_centerOfMass2D.x);
+    centerOfMassBottle.addInt(this->m_centerOfMass2D.y);
+
 
     yarp::os::Bottle objectBottle;
     objectBottle.addList() = colorBottle;
     objectBottle.addList() = cartesianPositionBottle;
     objectBottle.addList() = anglePositionBottle;
+    objectBottle.addList() = centerOfMassBottle;
 
     return objectBottle;
 }
@@ -66,6 +72,14 @@ const Color &iCubObject::getM_color() const {
 
 void iCubObject::set_color(const Color &m_color) {
     iCubObject::m_color = m_color;
+}
+
+const Point2d &iCubObject::getM_centerOfMass2D() const {
+    return m_centerOfMass2D;
+}
+
+void iCubObject::setM_centerOfMass2D(const Point2d &m_centerOfMass2D) {
+    iCubObject::m_centerOfMass2D = m_centerOfMass2D;
 }
 
 

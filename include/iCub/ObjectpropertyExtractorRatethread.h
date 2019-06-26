@@ -198,7 +198,7 @@ private:
      * Function to get the center position in 2D referencial of input Image
      */
 
-    cv::Point2f getCenter2DPosition();
+    cv::Point2i getCenterOfMass(const cv::Mat inputImage);
 
     /**
      * Function to detect contours
