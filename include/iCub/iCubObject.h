@@ -18,12 +18,16 @@ struct  Color{
     int red, green, blue;
 };
 
-struct  Point2d{
-    Point2d() : x(), y() {}
-    Point2d( int t_x, int t_y)
-            : x(t_x), y(t_y) {}
-    int x, y;
-};
+
+namespace iCub{
+    struct  Point2d{
+        Point2d() : x(), y() {}
+        Point2d( int t_x, int t_y)
+                : x(t_x), y(t_y) {}
+        int x, y;
+    };
+}
+
 
 class iCubObject {
 
@@ -49,16 +53,22 @@ public:
     const Color &getM_color() const;
     void set_color(const Color &m_color);
 
-    const Point2d &getM_centerOfMass2D() const;
+    const iCub::Point2d &get_rectangleTopLeft() const;
 
-    void setM_centerOfMass2D(const Point2d &m_centerOfMass2D);
+    void set_rectangleTopLeft(const iCub::Point2d &m_centerOfMass2D);
+
+    const iCub::Point2d &get_rectangleBottomRight() const;
+
+    void set_rectangleBottomRight(const iCub::Point2d &m_rectangleBottomRight);
 
 private:
 
     Color m_color;
     std::vector<double> m_anglePosition;
     std::vector<double> m_cartesianPosition;
-    Point2d m_centerOfMass2D;
+    iCub::Point2d m_rectangleTopLeft;
+    iCub::Point2d m_rectangleBottomRight;
+
 
 
 };

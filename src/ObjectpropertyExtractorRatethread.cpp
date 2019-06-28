@@ -164,7 +164,9 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
     Bottle &features = featuresPortOut.prepare();
     features.clear();
 
-    const cv::Point2i centerOfMass = getCenterOfMass(t_inputImage);
+
+    iCub::Point2d topLeft, bottomRight;
+    getRectanglePoints(t_inputImage, topLeft, bottomRight);
     const Color color = this->getDominantColor(t_inputImage);
 
 
@@ -176,7 +178,9 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
     receivedObject.set_color(color);
     receivedObject.setAnglePosition(anglesPosition);
     receivedObject.setCartesianPosition(cartesianPosition);
-    receivedObject.setM_centerOfMass2D()
+    receivedObject.set_rectangleTopLeft(topLeft);
+    receivedObject.set_rectangleBottomRight(bottomRight);
+
 
     features = receivedObject.toBottle();
 
@@ -236,33 +240,30 @@ Color ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
 }
 
 
-cv::Point2i ObjectpropertyExtractorRatethread::getCenterOfMass(const Mat inputImage) {
+void ObjectpropertyExtractorRatethread::getRectanglePoints(const Mat inputImage, iCub::Point2d &topLeft, iCub::Point2d &bottomRight) {
 
     Mat gray_image;
     cvtColor(inputImage, gray_image, COLOR_RGB2GRAY);
-    cv::Point2i left(-1 ,-1), bottom(-1,-1);
+    topLeft.x = -1;
+    bottomRight.x = -1;
+
 
     for(int i = 0; i < inputImage.rows; ++i){
         const int reverse_index_i =  inputImage.rows - i -1;
 
         for(int j = 0 ; j < inputImage.cols; ++j){
-            if ((int)gray_image.at<unsigned char>(i,j) > 0 && left.x == -1){
-                left.y = i;
-                left.x =j;
+            if ((int)gray_image.at<unsigned char>(i,j) > 0 && topLeft.x == -1){
+                topLeft.y = i;
+                topLeft.x =j;
             }
 
             const int reverse_index_j = inputImage.cols - j -1;
-            if((int)gray_image.at<unsigned char>(reverse_index_i, reverse_index_j) > 0 && bottom.x == -1){
-                bottom.y = reverse_index_i;
-                bottom.x = reverse_index_j;
+            if((int)gray_image.at<unsigned char>(reverse_index_i, reverse_index_j) > 0 && bottomRight.x == -1){
+                bottomRight.y = reverse_index_i;
+                bottomRight.x = reverse_index_j;
             }
         }
     }
-
-
-    const int center_x = left.x + (bottom.x - left.x ) / 2;
-    const int center_y = left.y + (bottom.y - left.y) / 2;
-    return cv::Point2i(center_x, center_y);
 
 
 }
@@ -380,7 +381,8 @@ void ObjectpropertyExtractorRatethread::testOPC() {
     o.set_color(blue);
     o.setAnglePosition(std::vector<double>{1, 2, 3});
     o.setCartesianPosition(std::vector<double>{1, 2, 3});
-
+    o.set_rectangleTopLeft(iCub::Point2d (100,100));
+    o.set_rectangleBottomRight(iCub::Point2d(200,200));
     this->sendFeatures(o);
 
 }

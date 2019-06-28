@@ -192,7 +192,7 @@ bool ObjectpropertyExtractorModule::respond(const Bottle &command, Bottle &reply
         case COMMAND_VOCAB_TEST:
             rec = true;
             {
-                yInfo("Find color %s",rThread->testColor(cv::imread("../tmp2.jpeg")).c_str());
+                rThread->testOPC();
                 ok = true;
             }
             break;
