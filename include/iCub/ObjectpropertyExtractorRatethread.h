@@ -145,9 +145,18 @@ public:
 
 private:
 
+
+    enum{
+        COMMAND_VOCAB_GET = yarp::os::createVocab('g', 'e', 't'),
+        COMMAND_VOCAB_3D = yarp::os::createVocab('3', 'd'),
+        COMMAND_VOCAB_MONO = yarp::os::createVocab('m', 'o', 'n', 'o'),
+        COMMAND_VOCAB_ACK = yarp::os::createVocab('a', 'c', 'k'),
+
+    };
+
     std::string robot;              // name of the robot
     std::string name;               // rootname of all the ports opened by this thread
-
+    int widthInput, heightInput;
 
     int cannyThreshold;
 
@@ -159,7 +168,7 @@ private:
     yarp::os::BufferedPort<yarp::os::Bottle> input2DPosition;
     yarp::os::BufferedPort<yarp::os::Bottle> featuresPortOut;
     yarp::os::BufferedPort<yarp::os::Bottle> anglePositionPort;
-    yarp::os::BufferedPort<yarp::os::Bottle> cartesianPositionPort;
+    yarp::os::RpcClient RpcIkinGazeCtrl;
     // Local variables for processing
     cv::Mat inputImageMat;
 
@@ -170,7 +179,7 @@ private:
     * Function that return 3D world coordinate from 2D points
     */
 
-    std::vector<double> getCoordinateWorld3D();
+    std::vector<double> getCoordinateWorld3D(iCub::Point2d &topLeft, iCub::Point2d &bottomRight);
 
     /**
     * Function that return the  world coordinate express in angles

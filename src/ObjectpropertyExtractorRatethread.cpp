@@ -47,6 +47,14 @@ ObjectpropertyExtractorRatethread::ObjectpropertyExtractorRatethread(yarp::os::R
     cannyThreshold = rf.check("cannyThreshold",
                               Value(80),
                               "canny Threshold parameter ").asInt();
+    widthInput = rf.check("widthInput",
+                          Value(320),
+                          "width of input image (int) ").asInt();
+
+
+    heightInput = rf.check("hieghtInput",
+                           Value(240),
+                           "width of input image (int) ").asInt();
 
 }
 
@@ -88,8 +96,8 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
     }
 
 
-    if (!cartesianPositionPort.open(getName("/cartesianPositionPort"))) {
-        yInfo("Unable to open port /cartesianPositionPort");
+    if (!RpcIkinGazeCtrl.open(getName("/iKinGazeCtrl/rpc:o"))) {
+        yInfo("Unable to open port /iKinGazeCtrl/rpc:o");
         return false;  // unable to open; let RFModule know so that it won't run
     }
 
@@ -98,7 +106,7 @@ bool ObjectpropertyExtractorRatethread::threadInit() {
 
     }
 
-    if (!NetworkBase::connect("/iKinGazeCtrl/x:o", cartesianPositionPort.getName())) {
+    if (!NetworkBase::connect(RpcIkinGazeCtrl.getName(), "/ikinGazeCtrl/rpc")) {
         yInfo("Unable to connect to iKinGazeCtrl/angles:o check that IkInGazeCtrl is running");
 
     }
@@ -172,7 +180,7 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
     const std::string contour_name = this->getContours(t_inputImage);
     const vector<double> anglesPosition = this->getCoordinateWorldAngles();
-    const vector<double> cartesianPosition = this->getCoordinateWorld3D();
+    const vector<double> cartesianPosition = this->getCoordinateWorld3D(topLeft, bottomRight);
 
 
     receivedObject.set_color(color);
@@ -192,16 +200,40 @@ void ObjectpropertyExtractorRatethread::extractFeatures() {
 
 //********************************************* Core functions *********************************************************
 
-std::vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorld3D() {
-
-    Bottle *position3DBottle = cartesianPositionPort.read();
+std::vector<double> ObjectpropertyExtractorRatethread::getCoordinateWorld3D(iCub::Point2d &topLeft, iCub::Point2d &bottomRight) {
 
     std::vector<double> cartesianPosition;
-    cartesianPosition.push_back(position3DBottle->get(0).asDouble());
-    cartesianPosition.push_back(position3DBottle->get(1).asDouble());
-    cartesianPosition.push_back(position3DBottle->get(2).asDouble());
+    int centerOfMassX = bottomRight.x / 2;
+    int centerOfMassY = bottomRight.y / 2;
+    Bottle cmd, reply;
 
-    return cartesianPosition;
+    cmd.addVocab(COMMAND_VOCAB_GET);
+    cmd.addVocab(COMMAND_VOCAB_3D);
+    cmd.addVocab(COMMAND_VOCAB_MONO);
+
+    Bottle sub_cmd;
+    sub_cmd.addString("left");
+    sub_cmd.addInt(centerOfMassX);
+    sub_cmd.addInt(centerOfMassY);
+    sub_cmd.addInt(1);
+
+    cmd.addList() = sub_cmd;
+
+    RpcIkinGazeCtrl.write(cmd,reply);
+
+    if(cmd.get(0).asVocab() == COMMAND_VOCAB_ACK){
+        Bottle *positionBottle = cmd.get(1).asList();
+        cartesianPosition.push_back(positionBottle->get(0).asDouble());
+        cartesianPosition.push_back(positionBottle->get(1).asDouble());
+        cartesianPosition.push_back(positionBottle->get(2).asDouble());
+    }
+
+    else{
+        yError("unable to compute 3D position with 2D point %d %d", centerOfMassX, centerOfMassY);
+        cartesianPosition.push_back(-1);
+        cartesianPosition.push_back(-1);
+        cartesianPosition.push_back(-1);
+    }
 
 }
 
@@ -223,7 +255,7 @@ Color ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
     const int value = hsv_value.at<Vec3b>(0, 0).val[2];
 
     if (sat < 30 && value > 160) {
-        Color white("white", 255, 255,  255);
+        Color white("white", 255, 255, 255);
         return white;
     }
 
@@ -234,13 +266,14 @@ Color ObjectpropertyExtractorRatethread::getDominantColor(const Mat t_src) {
         }
     }
 
-    Color default_color("unknown", 0,0,0);
+    Color default_color("unknown", 0, 0, 0);
     return default_color;
 
 }
 
 
-void ObjectpropertyExtractorRatethread::getRectanglePoints(const Mat inputImage, iCub::Point2d &topLeft, iCub::Point2d &bottomRight) {
+void ObjectpropertyExtractorRatethread::getRectanglePoints(const Mat inputImage, iCub::Point2d &topLeft,
+                                                           iCub::Point2d &bottomRight) {
 
     Mat gray_image;
     cvtColor(inputImage, gray_image, COLOR_RGB2GRAY);
@@ -248,17 +281,17 @@ void ObjectpropertyExtractorRatethread::getRectanglePoints(const Mat inputImage,
     bottomRight.x = -1;
 
 
-    for(int i = 0; i < inputImage.rows; ++i){
-        const int reverse_index_i =  inputImage.rows - i -1;
+    for (int i = 0; i < inputImage.rows; ++i) {
+        const int reverse_index_i = inputImage.rows - i - 1;
 
-        for(int j = 0 ; j < inputImage.cols; ++j){
-            if ((int)gray_image.at<unsigned char>(i,j) > 0 && topLeft.x == -1){
+        for (int j = 0; j < inputImage.cols; ++j) {
+            if ((int) gray_image.at<unsigned char>(i, j) > 0 && topLeft.x == -1) {
                 topLeft.y = i;
-                topLeft.x =j;
+                topLeft.x = j;
             }
 
-            const int reverse_index_j = inputImage.cols - j -1;
-            if((int)gray_image.at<unsigned char>(reverse_index_i, reverse_index_j) > 0 && bottomRight.x == -1){
+            const int reverse_index_j = inputImage.cols - j - 1;
+            if ((int) gray_image.at<unsigned char>(reverse_index_i, reverse_index_j) > 0 && bottomRight.x == -1) {
                 bottomRight.y = reverse_index_i;
                 bottomRight.x = reverse_index_j;
             }
@@ -339,7 +372,7 @@ std::string ObjectpropertyExtractorRatethread::getContours(const Mat inputImage)
                    boundingRect(approximated_poly).width == boundingRect(approximated_poly).height) {
             return "square";
         } else {
-          return "circle ";
+            return "circle ";
 
         }
     }
@@ -381,8 +414,8 @@ void ObjectpropertyExtractorRatethread::testOPC() {
     o.set_color(blue);
     o.setAnglePosition(std::vector<double>{1, 2, 3});
     o.setCartesianPosition(std::vector<double>{1, 2, 3});
-    o.set_rectangleTopLeft(iCub::Point2d (100,100));
-    o.set_rectangleBottomRight(iCub::Point2d(200,200));
+    o.set_rectangleTopLeft(iCub::Point2d(100, 100));
+    o.set_rectangleBottomRight(iCub::Point2d(200, 200));
     this->sendFeatures(o);
 
 }
